@@ -1,0 +1,43 @@
+<core:FragmentDefinition xmlns:core="sap.ui.core" xmlns="sap.m">
+    <Dialog title="Job Log Overview" resizable="true" draggable="true" contentWidth="60rem">
+        <content>
+            <Table id="jobLogTable" items="{path: '/JobLog', parameters: {$count: true}, events: {dataReceived: '.onLoggedDataReceived'}}">
+                <columns>
+                    <Column width="6rem">
+                        <Text text="Date" />
+                    </Column>
+                    <Column width="6rem">
+                        <Text text="Time" />
+                    </Column>
+                    <Column>
+                        <Text text="Message text" />
+                    </Column>
+                    <Column width="6rem">
+                        <Text text="Msg Class" />
+                    </Column>
+                    <Column width="4rem">
+                        <Text text="No." />
+                    </Column>
+                    <Column width="4rem">
+                        <Text text="Type" />
+                    </Column>
+                </columns>
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Text text="{LogDate}" />
+                            <Text text="{LogTime}" />
+                            <Text text="{MessageText}" />
+                            <Text text="{MsgId}" />
+                            <Text text="{MsgNo}" />
+                            <ObjectStatus text="{MsgType}" state="{= ${CriticalityColor} === 1 ? 'Error' : ${CriticalityColor} === 2 ? 'Warning' : ${CriticalityColor} === 3 ? 'Success' : 'None'}" />
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </content>
+        <buttons>
+            <Button text="Close" press="onCloseJobLog" />
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

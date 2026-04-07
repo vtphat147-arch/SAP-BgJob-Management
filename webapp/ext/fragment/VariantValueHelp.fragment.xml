@@ -1,0 +1,30 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+     <TableSelectDialog
+        title="Select Variant"
+        contentWidth="600px"
+        class="sapUiPopupWithPadding"
+        items="{path: '/Z_I_VariantVH', sorter: { path: 'VariantName' }}"
+        search=".onVariantSearch"
+        confirm=".onVariantConfirm"
+        cancel=".onVariantCancel">
+        
+        <!-- Định nghĩa các cột -->
+        <columns>
+            <Column width="40%">
+                <header><Text text="Variant Name" /></header>
+            </Column>
+            <Column width="60%">
+                <header><Text text="Created By" /></header>
+            </Column>                           
+        </columns>
+
+        <!-- Định nghĩa dòng dữ liệu -->
+        <ColumnListItem type="Active">
+            <cells>
+                <Text text="{VariantName}" />
+                <Text text="{CreatedBy}" />
+            </cells>
+        </ColumnListItem>
+
+    </TableSelectDialog>
+</core:FragmentDefinition>

@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0">
+    <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
+        <edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="Common"/>
+    </edmx:Reference>
+    <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/UI.xml">
+        <edmx:Include Namespace="com.sap.vocabularies.UI.v1" Alias="UI"/>
+    </edmx:Reference>
+    <edmx:Reference Uri="/sap/opu/odata4/sap/zui_job_manage01_o4/srvd/sap/z_sd_job_ovp/0001/$metadata">
+        <edmx:Include Namespace="com.sap.gateway.srvd.z_sd_job_ovp.v0001" Alias="SAP__self"/>
+    </edmx:Reference>
+    <edmx:DataServices>
+        <Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="local">
+            <Annotations Target="SAP__self.JobListType">
+
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- TABLE MACROS                                        -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <Annotation Term="UI.LineItem" Qualifier="tableMacro">
+                    <Collection>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="JobName"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="JobCount"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="StartDate"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="StartTime"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="StatusText"/>
+                            <PropertyValue Property="Label" String="StatusText"/>
+                            <PropertyValue Property="Criticality" Path="Criticality"/>
+                            <PropertyValue Property="CriticalityRepresentation" EnumMember="UI.CriticalityRepresentationType/WithIcon"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="DurationInSeconds"/>
+                            <PropertyValue Property="Label" String="DurationInSeconds"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="CreatedBy"/>
+                        </Record>
+                    </Collection>
+                </Annotation>
+
+                <Annotation Term="UI.LineItem" Qualifier="tableMacro2">
+                    <Collection>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="JobName"/>
+                            <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="JobCount"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="StatusText"/>
+                            <PropertyValue Property="Criticality" Path="Criticality"/>
+                            <PropertyValue Property="CriticalityRepresentation" EnumMember="UI.CriticalityRepresentationType/WithIcon"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="StartDate"/>
+                            <PropertyValue Property="Label" String="{@i18n>startDate}"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="StartTime"/>
+                            <PropertyValue Property="Label" String="{@i18n>startTime}"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="DurationInSeconds"/>
+                            <PropertyValue Property="Label" String="{@i18n>duration}"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="CreatedBy"/>
+                            <PropertyValue Property="Label" String="{@i18n>createdBy}"/>
+                        </Record>
+                    </Collection>
+                </Annotation>
+
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- FILTER BAR MACROS                                   -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <Annotation Term="UI.SelectionFields" Qualifier="filterBarMacro">
+                    <Collection/>
+                </Annotation>
+                <Annotation Term="UI.SelectionFields" Qualifier="filterBarMacro1">
+                    <Collection/>
+                </Annotation>
+                <Annotation Term="UI.SelectionFields" Qualifier="filterBarMacro2">
+                    <Collection>
+                        <PropertyPath>JobName</PropertyPath>
+                        <PropertyPath>CreatedBy</PropertyPath>
+                        <PropertyPath>StatusText</PropertyPath>
+                    </Collection>
+                </Annotation>
+                <Annotation Term="UI.SelectionFields" Qualifier="filterBarMacro3">
+                    <Collection>
+                        <PropertyPath>JobName</PropertyPath>
+                        <PropertyPath>StartDate</PropertyPath>
+                        <PropertyPath>StatusText</PropertyPath>
+                        <PropertyPath>CreatedBy</PropertyPath>
+                    </Collection>
+                </Annotation>
+
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- HEADER: DataPoint + HeaderFacets                    -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <Annotation Term="UI.DataPoint" Qualifier="StatusText">
+                    <Record Type="UI.DataPointType">
+                        <PropertyValue Property="Value" Path="StatusText"/>
+                        <PropertyValue Property="Title" String="Status"/>
+                        <PropertyValue Property="Criticality" Path="Criticality"/>
+                    </Record>
+                </Annotation>
+                <Annotation Term="UI.HeaderFacets">
+                    <Collection>
+                        <Record Type="UI.ReferenceFacet">
+                            <PropertyValue Property="ID" String="StatusText"/>
+                            <PropertyValue Property="Target" AnnotationPath="@UI.DataPoint#StatusText"/>
+                        </Record>
+                    </Collection>
+                </Annotation>
+
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- FACETS: Header + Steps + Logs                       -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <Annotation Term="UI.Facets">
+                    <Collection>
+
+                        <!-- Khối 2 hộp thông tin nằm ngang -->
+                        <Record Type="UI.CollectionFacet">
+                            <PropertyValue Property="Label" String="General Information"/>
+                            <PropertyValue Property="ID" String="GeneralInfoColl"/>
+                            <PropertyValue Property="Facets">
+                                <Collection>
+                                    <Record Type="UI.ReferenceFacet">
+                                        <PropertyValue Property="Label" String="Job Info"/>
+                                        <PropertyValue Property="ID" String="JobInfo"/>
+                                        <PropertyValue Property="Target" AnnotationPath="@UI.FieldGroup#FG_Gen"/>
+                                    </Record>
+                                    <Record Type="UI.ReferenceFacet">
+                                        <PropertyValue Property="Label" String="Execution Details"/>
+                                        <PropertyValue Property="ID" String="ExecDetails"/>
+                                        <PropertyValue Property="Target" AnnotationPath="@UI.FieldGroup#FG_Start"/>
+                                    </Record>
+                                </Collection>
+                            </PropertyValue>
+                        </Record>
+
+                        <!-- Tab Job Steps -->
+                        <Record Type="UI.ReferenceFacet">
+                            <PropertyValue Property="Label" String="Job Steps"/>
+                            <PropertyValue Property="ID" String="JobSteps"/>
+                            <PropertyValue Property="Target" AnnotationPath="_Steps/@UI.LineItem"/>
+                        </Record>
+
+                        <!-- Tab Job Log -->
+                        <Record Type="UI.ReferenceFacet">
+                            <PropertyValue Property="Label" String="Job Log"/>
+                            <PropertyValue Property="ID" String="JobLog"/>
+                            <PropertyValue Property="Target" AnnotationPath="_Logs/@UI.LineItem"/>
+                        </Record>
+
+                        <!-- Tab Job Spool -->
+                        <Record Type="UI.ReferenceFacet">
+                            <PropertyValue Property="Label" String="Spool List"/>
+                            <PropertyValue Property="ID" String="JobSpool"/>
+                            <PropertyValue Property="Target" AnnotationPath="_Spool/@UI.LineItem"/>
+                        </Record>
+
+                    </Collection>
+                </Annotation>
+
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- FIELD GROUPS                                        -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <Annotation Term="UI.FieldGroup" Qualifier="FG_Gen">
+                    <Record>
+                        <PropertyValue Property="Data">
+                            <Collection>
+                                <Record Type="UI.DataField">
+                                    <PropertyValue Property="Value" Path="JobName"/>
+                                    <PropertyValue Property="Label" String="Job Name"/>
+                                </Record>
+                                <Record Type="UI.DataField">
+                                    <PropertyValue Property="Value" Path="JobCount"/>
+                                    <PropertyValue Property="Label" String="Job ID"/>
+                                </Record>
+                                <Record Type="UI.DataField">
+                                    <PropertyValue Property="Value" Path="JobClass"/>
+                                    <PropertyValue Property="Label" String="Job Class (Priority)"/>
+                                </Record>
+                                <Record Type="UI.DataField">
+                                    <PropertyValue Property="Value" Path="ExecutingServer"/>
+                                    <PropertyValue Property="Label" String="Executing Server"/>
+                                </Record>
+                                <Record Type="UI.DataField">
+                                    <PropertyValue Property="Value" Path="CreatedBy"/>
+                                    <PropertyValue Property="Label" String="Created By"/>
+                                </Record>
+                                <Record Type="UI.DataField">
+                                    <PropertyValue Property="Value" Path="StatusText"/>
+                                    <PropertyValue Property="Label" String="Status"/>
+                                    <PropertyValue Property="Criticality" Path="Criticality"/>
+                                </Record>
+                            </Collection>
+                        </PropertyValue>
+                    </Record>
+                </Annotation>
+
+                <Annotation Term="UI.FieldGroup" Qualifier="FG_Start">
+                    <Record>
+                        <PropertyValue Property="Data">
+                            <Collection>
+                                <Record Type="UI.DataField">
+                                    <PropertyValue Property="Value" Path="PlannedDate"/>
+                                    <PropertyValue Property="Label" String="Planned Start"/>
+                                </Record>
+                                <Record Type="UI.DataField">
+                                    <PropertyValue Property="Value" Path="StartDate"/>
+                                    <PropertyValue Property="Label" String="Actual Start Date"/>
+                                </Record>
+                                <Record Type="UI.DataField">
+                                    <PropertyValue Property="Value" Path="StartTime"/>
+                                    <PropertyValue Property="Label" String="Actual Start Time"/>
+                                </Record>
+                                <Record Type="UI.DataField">
+                                    <PropertyValue Property="Value" Path="EndDate"/>
+                                    <PropertyValue Property="Label" String="Actual End Date"/>
+                                </Record>
+                                <Record Type="UI.DataField">
+                                    <PropertyValue Property="Value" Path="DurationInSeconds"/>
+                                    <PropertyValue Property="Label" String="Duration (Seconds)"/>
+                                </Record>
+                            </Collection>
+                        </PropertyValue>
+                    </Record>
+                </Annotation>
+
+            </Annotations>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- LABEL                                                   -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <Annotations Target="SAP__self.JobListType/StatusText">
+                <Annotation Term="Common.Label" String="Status"/>
+            </Annotations>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- JOB STEPS TABLE                                         -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <Annotations Target="SAP__self.JobStepType">
+                <Annotation Term="UI.LineItem">
+                    <Collection>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="StepCount"/>
+                            <PropertyValue Property="Label" String="Step No."/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="ProgramName"/>
+                            <PropertyValue Property="Label" String="ABAP Program"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="VariantName"/>
+                            <PropertyValue Property="Label" String="Variant"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="StepUser"/>
+                            <PropertyValue Property="Label" String="User"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="Status"/>
+                            <PropertyValue Property="Label" String="Status"/>
+                        </Record>
+                    </Collection>
+                </Annotation>
+            </Annotations>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- JOB LOG TABLE                                           -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <Annotations Target="SAP__self.JobLogType">
+                <Annotation Term="UI.LineItem">
+                    <Collection>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="LogDate"/>
+                            <PropertyValue Property="Label" String="Date"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="LogTime"/>
+                            <PropertyValue Property="Label" String="Time"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="MsgType"/>
+                            <PropertyValue Property="Label" String="Type"/>
+                            <PropertyValue Property="Criticality" Path="CriticalityColor"/>
+                            <PropertyValue Property="CriticalityRepresentation" EnumMember="UI.CriticalityRepresentationType/WithIcon"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="MessageText"/>
+                            <PropertyValue Property="Label" String="Message"/>
+                        </Record>
+                    </Collection>
+                </Annotation>
+            </Annotations>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- JOB SPOOL TABLE                                         -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <Annotations Target="SAP__self.JobSpoolType">
+    <Annotation Term="UI.LineItem">
+        <Collection>
+            <Record Type="UI.DataField">
+                <PropertyValue Property="Value" Path="SpoolNo"/>
+                <PropertyValue Property="Label" String="Spool Number"/>
+            </Record>
+            <Record Type="UI.DataField">
+                <PropertyValue Property="Value" Path="SpoolType"/>
+                <PropertyValue Property="Label" String="Document Type"/>
+            </Record>
+            <Record Type="UI.DataField">
+                <PropertyValue Property="Value" Path="SpoolTitle"/>
+                <PropertyValue Property="Label" String="Title"/>
+            </Record>
+
+            <!-- 🔄 THAY TotalPages -> PaperFormat -->
+            <Record Type="UI.DataField">
+                <PropertyValue Property="Value" Path="PaperFormat"/>
+                <PropertyValue Property="Label" String="Format"/>
+            </Record>
+
+            <Record Type="UI.DataField">
+                <PropertyValue Property="Value" Path="CreateTime"/>
+                <PropertyValue Property="Label" String="Creation Time"/>
+            </Record>
+        </Collection>
+    </Annotation>
+</Annotations>
+
+
+        </Schema>
+    </edmx:DataServices>
+</edmx:Edmx>

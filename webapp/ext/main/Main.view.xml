@@ -1,0 +1,40 @@
+<mvc:View xmlns:core="sap.ui.core" xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:f="sap.f" xmlns:macros="sap.fe.macros" xmlns:html="http://www.w3.org/1999/xhtml" controllerName="project5.ext.main.Main">
+    <f:DynamicPage id="Main" headerExpanded="true">
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>MainTitle}"/>
+                </f:heading>
+            </f:DynamicPageTitle>
+        </f:title>
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                 <macros:FilterBar id="FilterBar" metaPath="/JobList/@com.sap.vocabularies.UI.v1.SelectionFields#filterBarMacro3"/>
+            </f:DynamicPageHeader>
+        </f:header>
+        <f:content>
+            <macros:Table id="Table" rowPress=".onRowPress" metaPath="/JobList/@com.sap.vocabularies.UI.v1.LineItem#tableMacro2" filterBar="FilterBar" header="Background Jobs" isSearchable="false" type="ResponsiveTable" enableFullScreen="true" enableExport="true" selectionMode="Multi" variantManagement="Page">
+                <macros:actions>
+                    <Button text="🔄 Refresh" type="Transparent" press="onRefreshTable"/>
+                    <Button id="btnManage" text="⚙️ Manage" type="Default" press="onOpenManageMenu"/>
+                    <Button text="📋 Log" type="Default" press="onShowJobLog"/>
+                    <Button text="👤 My Jobs" type="Emphasized" press="onFilterOwnJobs"/>
+                    <Button text="📅 Schedule" type="Success" press="onCreateJob"/>
+                </macros:actions>
+            </macros:Table>
+        </f:content>
+    </f:DynamicPage>
+
+    <!-- Thêm Menu ẩn (ActionSheet) ở đây, sẽ được gọi lên khi bấm nút Manage -->
+    <mvc:dependents>
+        <ActionSheet id="manageActionSheet" placement="Bottom">
+            <buttons>
+                <Button text="▶️ Release" press="onReleaseJob"/>
+                <Button text="🔁 Repeat"  press="onRepeatJob"/>
+                <Button text="📄 Copy" press="onCopyWithRename"/>
+                <Button text="⏹️ Stop" type="Attention" press="onStopJob"/>
+                <Button text="🗑️ Delete" type="Reject" press="onDeleteJob"/>
+            </buttons>
+        </ActionSheet>
+    </mvc:dependents>
+</mvc:View>

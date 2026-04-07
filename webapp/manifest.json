@@ -1,0 +1,233 @@
+{
+  "_version": "1.48.0",
+  "sap.app": {
+    "id": "project5",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "0.0.1"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "resources": "resources.json",
+    "sourceTemplate": {
+      "id": "@sap/generator-fiori:fpm",
+      "version": "1.20.1",
+      "toolsId": "f8a77e9b-b4de-4ac6-9da2-3e33f9776678"
+    },
+    "dataSources": {
+      "annotation": {
+        "type": "ODataAnnotation",
+        "uri": "annotations/annotation.xml",
+        "settings": {
+          "localUri": "annotations/annotation.xml"
+        }
+      },
+      "mainService": {
+        "uri": "/sap/opu/odata4/sap/zui_job_manage01_o4/srvd/sap/z_sd_job_ovp/0001/",
+        "type": "OData",
+        "settings": {
+          "annotations": [
+            "annotation"
+          ],
+          "odataVersion": "4.0"
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "",
+      "favIcon": "",
+      "phone": "",
+      "phone@2": "",
+      "tablet": "",
+      "tablet@2": ""
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.108.33",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.core": {},
+        "sap.fe.macros": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "project5.i18n.i18n"
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "@i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "uri": "i18n/i18n.properties"
+      }
+    },
+    "resources": {
+      "css": []
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "viewType": "XML",
+        "controlAggregation": "pages",
+        "controlId": "appContent",
+        "transition": "slide",
+        "type": "standard"
+      },
+      "routes": [
+        {
+          "name": "JobListMain",
+          "pattern": ":?query:",
+          "target": "JobListMain"
+        },
+        {
+          "name": "CreateJobRoute",
+          "pattern": "create-job",
+          "target": "CreateJobTarget"
+        },
+        {
+          "name": "JobListObjectPage",
+          "pattern": "JobList({JobListKey}):?query:",
+          "target": "JobListObjectPage"
+        },
+        {
+          "name": "JobLogObjectPage",
+          "pattern": "JobList({JobListKey})/_Logs({LogKey}):?query:",
+          "target": "JobLogObjectPage"
+        },
+        {
+          "name": "JobStepObjectPage",
+          "pattern": "JobList({JobListKey})/_Steps({StepKey}):?query:",
+          "target": "JobStepObjectPage"
+        },
+        {
+          "name": "JobSpoolObjectPage",
+          "pattern": "JobList({JobListKey})/_Spool({SpoolKey}):?query:",
+          "target": "JobSpoolObjectPage"
+        }
+      ],
+      "targets": {
+        "JobListMain": {
+          "type": "Component",
+          "id": "JobListMain",
+          "name": "sap.fe.core.fpm",
+          "options": {
+            "settings": {
+              "navigation": {
+                "JobList": {
+                  "detail": {
+                    "route": "JobListObjectPage"
+                  }
+                }
+              },
+              "contextPath": "/JobList",
+              "viewName": "project5.ext.main.Main"
+            }
+          }
+        },
+        "CreateJobTarget": {
+          "type": "View",
+          "id": "CreateJobId",
+          "name": "CreateJob",
+          "viewName": "project5.ext.main.CreateJob",
+          "viewId": "CreateJobId"
+        },
+        "JobListObjectPage": {
+          "type": "Component",
+          "id": "JobListObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "navigation": {
+                "_Logs": {
+                  "detail": {
+                    "route": "JobLogObjectPage"
+                  }
+                },
+                "_Steps": {
+                  "detail": {
+                    "route": "JobStepObjectPage"
+                  }
+                },
+                "_Spool": {
+                  "detail": {
+                    "route": "JobSpoolObjectPage"
+                  }
+                }
+              },
+              "contextPath": "/JobList",
+              "sectionLayout": "Page"
+            }
+          }
+        },
+        "JobLogObjectPage": {
+          "type": "Component",
+          "id": "JobLogObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "contextPath": "/JobList/_Logs",
+              "sectionLayout": "Page"
+            }
+          }
+        },
+        "JobStepObjectPage": {
+          "type": "Component",
+          "id": "JobStepObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "contextPath": "/JobList/_Steps",
+              "sectionLayout": "Page",
+              "headerExpanded": true
+            }
+          }
+        },
+        "JobSpoolObjectPage": {
+          "type": "Component",
+          "id": "JobSpoolObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "contextPath": "/JobList/_Spool",
+              "sectionLayout": "Page"
+            }
+          }
+        }
+      }
+    }
+  },
+  "sap.fe": {
+    "app": {
+      "enableLazyLoading": true
+    }
+  },
+  "sap.fiori": {}
+}

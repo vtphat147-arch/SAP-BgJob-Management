@@ -1,0 +1,101 @@
+<core:FragmentDefinition xmlns:core="sap.ui.core" xmlns="sap.m" xmlns:f="sap.ui.layout.form">
+    <Dialog
+        title="Release Job"
+        contentWidth="560px"
+        draggable="true"
+        resizable="true"
+        horizontalScrolling="false"
+        stretchOnPhone="true"
+        class="sapUiResponsivePadding--content sapUiResponsivePadding--header sapUiResponsivePadding--footer">
+        <content>
+            <VBox class="sapUiSmallMarginBottom sapUiTinyMarginTop">
+                <Title text="Start Configuration" level="H5" class="sapUiTinyMarginBottom"/>
+                <Text text="Choose how this job should start: run immediately or schedule an exact date and time." wrapping="true"/>
+            </VBox>
+
+            <IconTabBar id="idStartModeTabs" expandable="false" class="sapUiNoContentPadding sapUiTinyMarginBottom sapUiResponsiveContentPadding">
+                <items>
+                    <IconTabFilter key="immediate" text="Quick Start" icon="sap-icon://play">
+                        <VBox class="sapUiSmallMarginTop sapUiSmallMarginBottom sapUiSmallMarginBegin sapUiSmallMarginEnd">
+                            <Text text="Use this mode to release and start the job instantly after confirmation." wrapping="true" class="sapUiTinyMarginBottom"/>
+                            <CheckBox
+                                id="idImmedCheck"
+                                text="Run immediately"
+                                tooltip="Start the job right away"
+                                selected="{localRelease>/isImmediate}"
+                                select="onImmediateChange"/>
+                            <MessageStrip
+                                text="The job will be released and started immediately after you confirm."
+                                type="Success"
+                                showIcon="true"
+                                showCloseButton="false"
+                                visible="{localRelease>/isImmediate}"
+                                class="sapUiTinyMarginTop"/>
+                        </VBox>
+                    </IconTabFilter>
+
+                    <IconTabFilter key="scheduled" text="Scheduled Start" icon="sap-icon://date-time" visible="{= !${localRelease>/isImmediate}}">
+                        <VBox class="sapUiSmallMarginTop sapUiSmallMarginBottom sapUiSmallMarginBegin sapUiSmallMarginEnd">
+                            <Text text="Disable Run immediately to set a planned start date and time." wrapping="true" class="sapUiTinyMarginBottom"/>
+
+                            <f:SimpleForm
+                                editable="true"
+                                layout="ResponsiveGridLayout"
+                                class="sapUiNoMarginTop"
+                                labelSpanXL="4"
+                                labelSpanL="4"
+                                labelSpanM="4"
+                                labelSpanS="12"
+                                adjustLabelSpan="false"
+                                emptySpanXL="1"
+                                emptySpanL="1"
+                                emptySpanM="0"
+                                emptySpanS="0"
+                                columnsXL="1"
+                                columnsL="1"
+                                columnsM="1">
+                                <f:content>
+                                    <Label text="Scheduled Date" labelFor="idReleaseDate"
+                                        visible="{= !${localRelease>/isImmediate}}"
+                                        required="{= !${localRelease>/isImmediate}}"/>
+                                    <DatePicker
+                                        id="idReleaseDate"
+                                        valueFormat="yyyy-MM-dd"
+                                        displayFormat="long"
+                                        width="100%"
+                                        placeholder="Select scheduled date"
+                                        visible="{= !${localRelease>/isImmediate}}"/>
+
+                                    <Label text="Scheduled Time" labelFor="idReleaseTime"
+                                        visible="{= !${localRelease>/isImmediate}}"
+                                        required="{= !${localRelease>/isImmediate}}"/>
+                                    <TimePicker
+                                        id="idReleaseTime"
+                                        valueFormat="HH:mm:ss"
+                                        displayFormat="medium"
+                                        width="100%"
+                                        placeholder="Select scheduled time"
+                                        visible="{= !${localRelease>/isImmediate}}"/>
+                                </f:content>
+                            </f:SimpleForm>
+
+                            <MessageStrip
+                                text="The job will start at the scheduled date and time you selected."
+                                type="Warning"
+                                showIcon="true"
+                                showCloseButton="false"
+                                visible="{= !${localRelease>/isImmediate}}"
+                                class="sapUiTinyMarginTop"/>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        <beginButton>
+            <Button text="Confirm Release" type="Emphasized" icon="sap-icon://accept" press="onConfirmRelease"/>
+        </beginButton>
+        <endButton>
+            <Button text="Cancel" type="Transparent" press="onCloseReleaseDialog"/>
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>
