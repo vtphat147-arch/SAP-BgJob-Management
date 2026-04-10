@@ -6,6 +6,7 @@
     <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/UI.xml">
         <edmx:Include Namespace="com.sap.vocabularies.UI.v1" Alias="UI"/>
     </edmx:Reference>
+
     <edmx:Reference Uri="/sap/opu/odata4/sap/zui_job_manage01_o4/srvd/sap/z_sd_job_ovp/0001/$metadata">
         <edmx:Include Namespace="com.sap.gateway.srvd.z_sd_job_ovp.v0001" Alias="SAP__self"/>
     </edmx:Reference>
@@ -59,22 +60,32 @@
                             <PropertyValue Property="Value" Path="StatusText"/>
                             <PropertyValue Property="Criticality" Path="Criticality"/>
                             <PropertyValue Property="CriticalityRepresentation" EnumMember="UI.CriticalityRepresentationType/WithIcon"/>
+                            <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/>
                         </Record>
                         <Record Type="UI.DataField">
                             <PropertyValue Property="Value" Path="StartDate"/>
                             <PropertyValue Property="Label" String="{@i18n>startDate}"/>
+                            <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/>
                         </Record>
                         <Record Type="UI.DataField">
                             <PropertyValue Property="Value" Path="StartTime"/>
                             <PropertyValue Property="Label" String="{@i18n>startTime}"/>
+                            <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/>
                         </Record>
                         <Record Type="UI.DataField">
                             <PropertyValue Property="Value" Path="DurationInSeconds"/>
                             <PropertyValue Property="Label" String="{@i18n>duration}"/>
+                            <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="DelayInSeconds"/>
+                            <PropertyValue Property="Label" String="Delay (s)"/>
+                            <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/>
                         </Record>
                         <Record Type="UI.DataField">
                             <PropertyValue Property="Value" Path="CreatedBy"/>
                             <PropertyValue Property="Label" String="{@i18n>createdBy}"/>
+                            <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/>
                         </Record>
                     </Collection>
                 </Annotation>
