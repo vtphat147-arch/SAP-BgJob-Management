@@ -98,25 +98,32 @@ sap.ui.define(
                 var sRawTime = this.byId("idReleaseTime") ? this.byId("idReleaseTime").getValue() : "";     // "05:00:00"
                 var bIsImmediate = this.byId("idImmedCheck") ? this.byId("idImmedCheck").getSelected() : false;
 
-                // --- 2. ĐỊNH DẠNG LẠI CHO CHUẨN SAP (YYYYMMDD và HHMMSS) ---
-                // Xóa bỏ các dấu ngăn cách (- và :)
-                var sSapDate = sRawDate ? sRawDate.replace(/-/g, "") : "";
-                var sSapTime = sRawTime ? sRawTime.replace(/:/g, "") : "";
+                // --- 2. ĐỊNH DẠNG CHO CHUẨN ODATA V4 VÀ ĐỔI MÚI GIỜ (GIỐNG CREATE JOB) ---
+                var sSapDate = "";
+                var sSapTime = "";
+                var oDate = null;
 
-                // --- 3. NẾU LÀ IMMEDIATE THÌ ÉP NGÀY GIỜ LÀ HÔM NAY + HIỆN TẠI ---
                 if (bIsImmediate) {
-                    var oNow = new Date();
-                    // Lấy ngày hôm nay: YYYYMMDD
-                    var iYear = oNow.getFullYear();
-                    var iMonth = String(oNow.getMonth() + 1).padStart(2, "0");
-                    var iDay = String(oNow.getDate()).padStart(2, "0");
-                    sSapDate = iYear + iMonth + iDay;
+                    oDate = new Date(); // Lấy giờ hiện tại 
+                } else if (sRawDate && sRawTime) {
+                    // Chuyển chuỗi từ UI (local time ghép từ YYYY-MM-DD và HH:mm:ss) sang Date object
+                    oDate = new Date(sRawDate + "T" + sRawTime);
+                }
 
-                    // Lấy giờ hiện tại: HHMMSS
-                    var iHour = String(oNow.getHours()).padStart(2, "0");
-                    var iMin = String(oNow.getMinutes()).padStart(2, "0");
-                    var iSec = String(oNow.getSeconds()).padStart(2, "0");
-                    sSapTime = iHour + iMin + iSec;
+                if (oDate && !isNaN(oDate.getTime())) {
+                    // Convert local time → SAP server time (Europe/Berlin)
+                    var oFormatter = new Intl.DateTimeFormat('en-CA', {
+                        timeZone: 'Europe/Berlin',
+                        year: 'numeric', month: '2-digit', day: '2-digit',
+                        hour: '2-digit', minute: '2-digit', second: '2-digit',
+                        hour12: false
+                    });
+                    var aParts = oFormatter.formatToParts(oDate);
+                    var oParts = {};
+                    aParts.forEach(function (p) { oParts[p.type] = p.value; });
+
+                    sSapDate = oParts.year + "-" + oParts.month + "-" + oParts.day;
+                    sSapTime = oParts.hour + ":" + oParts.minute + ":" + oParts.second;
                 }
 
                 // --- 4. VALIDATE: Nếu không phải Immediate thì phải có Date và Time ---
