@@ -426,14 +426,19 @@ sap.ui.define(
             },
 
             onFilterOwnJobs: function () {
-                var sCurrentUser;
+                var sCurrentUser = "";
 
-                // 1. Lấy user đang đăng nhập
+                // 1. Lấy user đang đăng nhập (Trong Fiori Launchpad hoặc Sandbox)
                 if (sap.ushell && sap.ushell.Container) {
                     sCurrentUser = sap.ushell.Container.getService("UserInfo").getId();
                 } else {
-                    sCurrentUser = "DEV-244";
-                    console.warn("Running locally with mock user: " + sCurrentUser);
+                    // Nếu chạy chay (index.html) không có FLP, đành chịu không biết ai đăng nhập
+                    sCurrentUser = "";
+                    MessageToast.show("Warning: Not running in Fiori Launchpad. Cannot detect current user.");
+                }
+
+                if (!sCurrentUser) {
+                    return; // Nếu không biết user là ai thì không filter được
                 }
 
                 // 2. Tìm binding của bảng

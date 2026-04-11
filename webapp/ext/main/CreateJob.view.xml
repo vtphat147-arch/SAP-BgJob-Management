@@ -13,30 +13,43 @@
                     <f:SimpleForm editable="true" layout="ResponsiveGridLayout">
                         <f:content>
                             <Label text="Job Name" required="true"/>
-                            <Input value="{local>/jobName}" liveChange="onCheckStep1" placeholder="Enter job name..."/>
+                            <Input id="inpJobName" 
+                                value="{ path: 'local>/jobName', type: 'sap.ui.model.type.String' }" 
+                                liveChange=".onCheckStep1" 
+                                change=".onCheckStep1" 
+                                placeholder="Enter job name..."
+                                valueState="{= ${local>/jobName}.length > 0 ? 'None' : 'Error' }"
+                                valueStateText="Please enter a Job Name."/>
                             
                            <Label text="Program Name" required="true"/>
                             <Input 
                                 id="inpProgram"
-                                value="{local>/programName}" 
+                                value="{ path: 'local>/programName', type: 'sap.ui.model.type.String' }" 
                                 placeholder="Enter program name..." 
                                 showValueHelp="true" 
                                 valueHelpRequest=".onProgramValueHelp"
                                 change=".onProgramChange" 
                                 showSuggestion="true"
-                                suggestionItems="{/Z_I_ProgramVH}" >
+                                suggestionItems="{/Z_I_ProgramVH}" 
+                                valueState="{= ${local>/programName}.length > 0 ? 'None' : 'Error' }"
+                                valueStateText="Please enter or select a Program Name.">
+
+                                
                                 
                                 <suggestionItems>
                                     <core:ListItem text="{ProgramName}" additionalText="{Description}"/>
                                 </suggestionItems>
                             </Input>
                         
-                            <Label text="Variant Name"/>
-                            <Input value="{local>/variantName}" 
+                            <Label text="Variant Name" required="true"/>
+                            <Input id="inpVariant" 
+                                value="{ path: 'local>/variantName', type: 'sap.ui.model.type.String' }" 
                                 placeholder="Select variant"
                                 showValueHelp="true" 
-                                required="true"
-                                valueHelpRequest=".onVariantValueHelp"/>
+                                change=".onCheckStep1"
+                                valueHelpRequest=".onVariantValueHelp"
+                                valueState="{= ${local>/variantName}.length > 0 ? 'None' : 'Error' }"
+                                valueStateText="Please select a Variant."/>
                         </f:content>
                     </f:SimpleForm>
                 </WizardStep>
@@ -70,6 +83,8 @@
                                 displayFormat="dd.MM.yyyy, HH:mm:ss"
                                 enabled="{= !${local>/startImmediately}}" 
                                 visible="{= !${local>/startImmediately}}"
+                                valueState="{= (!${local>/startImmediately} &amp;&amp; !${local>/startDate}) ? 'Error' : 'None' }"
+                                valueStateText="Please select a start date and time."
                             />
 
                             <core:Title text="" /> 

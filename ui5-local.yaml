@@ -27,6 +27,7 @@ server:
       configuration:
         flp:
           theme: sap_horizon
+          authenticationMethod: "ias"
     - name: fiori-tools-proxy
       afterMiddleware: compression
       configuration:
