@@ -281,10 +281,7 @@
                             <PropertyValue Property="Value" Path="StepUser"/>
                             <PropertyValue Property="Label" String="User"/>
                         </Record>
-                        <Record Type="UI.DataField">
-                            <PropertyValue Property="Value" Path="Status"/>
-                            <PropertyValue Property="Label" String="Status"/>
-                        </Record>
+                        
                     </Collection>
                 </Annotation>
             </Annotations>
