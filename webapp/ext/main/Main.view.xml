@@ -17,7 +17,6 @@
                 <macros:actions>
                     <Button text="🔄 Refresh" type="Transparent" press="onRefreshTable"/>
                     <Button id="btnManage" text="⚙️ Manage" type="Default" press="onOpenManageMenu"/>
-                    <Button text="📋 Log" type="Default" press="onShowJobLog"/>
                     <Button text="👤 My Jobs" type="Emphasized" press="onFilterOwnJobs"/>
                     <Button text="📅 Schedule" type="Success" press="onCreateJob"/>
                 </macros:actions>

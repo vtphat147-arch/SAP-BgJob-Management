@@ -261,11 +261,11 @@ sap.ui.define([
                 var iFreqValue = 0;
 
                 switch (sRecurrence) {
-                    case "Every Minute":  sFreqType = "MINUTES"; iFreqValue = 1; break;
-                    case "Hourly":        sFreqType = "HOURLY";  iFreqValue = 1; break;
-                    case "Daily":         sFreqType = "DAILY";   iFreqValue = 1; break;
-                    case "Weekly":        sFreqType = "WEEKLY";  iFreqValue = 1; break;
-                    case "Monthly":       sFreqType = "MONTHLY"; iFreqValue = 1; break;
+                    case "Minutes":       sFreqType = "MINUTES"; iFreqValue = parseInt(oLocalData.frequency) || 1; break;
+                    case "Hourly":        sFreqType = "HOURLY";  iFreqValue = parseInt(oLocalData.frequency) || 1; break;
+                    case "Daily":         sFreqType = "DAILY";   iFreqValue = parseInt(oLocalData.frequency) || 1; break;
+                    case "Weekly":        sFreqType = "WEEKLY";  iFreqValue = parseInt(oLocalData.frequency) || 1; break;
+                    case "Monthly":       sFreqType = "MONTHLY"; iFreqValue = parseInt(oLocalData.frequency) || 1; break;
                     default:              sFreqType = "";        iFreqValue = 0; break;
                 }
 

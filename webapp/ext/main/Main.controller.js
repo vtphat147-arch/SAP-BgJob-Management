@@ -216,42 +216,39 @@ sap.ui.define(
                 }.bind(this));
             },
 
-            // ==================== HELPER: Gọi Bound Action cho nhiều dòng ====================
-            _executeAction: function (aContexts, sActionName, sLabel, oOptions) {
-                var that = this;
-                var aPromises = aContexts.map(function (oContext) {
-                    var oActionContext = oContext.getModel().bindContext(
-                        sActionName + "(...)", oContext
-                    );
-                    return oActionContext.execute().then(function () {
-                        return { success: true, name: oContext.getProperty("JobName") };
-                    }).catch(function (oError) {
-                        return { success: false, name: oContext.getProperty("JobName"), error: oError.message };
-                    });
-                });
+            // ==================== HELPER: Gọi Bound Action cho nhiều dòng (DỄ HIỂU) ====================
+            _executeAction: async function (aContexts, sActionName, sLabel, oOptions) {
+                var aSuccess = [];
+                var aFailed = [];
 
-                Promise.all(aPromises).then(function (aResults) {
-                    var aSuccess = aResults.filter(function (r) { return r.success; });
-                    var aFailed = aResults.filter(function (r) { return !r.success; });
+                // --- 0. Dọn dẹp các thông báo lỗi cũ trên giao diện (để không bị hiện thanh thông báo đỏ/vàng) ---
+                var oMessageManager = sap.ui.getCore().getMessageManager();
+                oMessageManager.removeAllMessages();
 
-                    if (aSuccess.length > 0) {
-                        MessageToast.show(sLabel + " completed for " + aSuccess.length + " job(s).");
+                // Chạy từng Job một (Tuần tự) để tránh lỗi Batch SAP
+                for (var oContext of aContexts) {
+                    var sJobName = oContext.getProperty("JobName") || "(unknown)";
+                    try {
+                        var oActionContext = oContext.getModel().bindContext(sActionName + "(...)", oContext);
+                        await oActionContext.execute(); // Chờ thằng này chạy xong mới qua thằng kế
+                        aSuccess.push(sJobName);
+                    } catch (oError) {
+                        var sErr = oError?.error?.message || oError?.message || "Unknown error";
+                        aFailed.push({ name: sJobName, error: sErr });
                     }
-                    if (aFailed.length > 0) {
-                        var sErrors = aFailed.map(function (r) { return r.name + ": " + r.error; }).join("\n");
-                        MessageBox.error(sLabel + " failed:\n" + sErrors);
-                    }
+                }
 
-                    // Với action tạo mới bản ghi (vd Repeat), bỏ lọc StartDate để không ẩn dòng mới.
-                    if (aSuccess.length > 0 && oOptions && oOptions.clearStartDateFilter) {
-                        that._clearStartDateFilter();
-                    }
+                // Hiển thị kết quả sau khi chạy xong hết
+                if (aSuccess.length > 0) {
+                    MessageToast.show(sLabel + " xong cho: " + aSuccess.join(", "));
+                }
+                if (aFailed.length > 0) {
+                    var sErrors = aFailed.map(function (r) { return "• " + r.name + ": " + r.error; }).join("\n");
+                    MessageBox.error(sLabel + " thất bại cho " + aFailed.length + " job:\n\n" + sErrors);
+                }
 
-                    // Refresh bảng sau khi thực hiện
-                    that._refreshTable();
-                });
+                this._refreshTable();
             },
-
 
             // ==================== REPEAT JOB ====================
             onRepeatJob: function () {
@@ -491,67 +488,6 @@ sap.ui.define(
                         "JobListKey": sKey
                     });
                 }
-            },
-
-            onShowJobLog: function () {
-                var oTable = this.byId("Table");
-                var aSelectedContexts = oTable.getSelectedContexts();
-
-                if (aSelectedContexts.length === 0) {
-                    MessageToast.show("Please select a job.");
-                    return;
-                }
-
-                var oContext = aSelectedContexts[0];
-                var sJobName = oContext.getProperty("JobName");
-                var sJobCount = oContext.getProperty("JobCount");
-
-                // FIX: Ensure JobCount is 8 digits. Backend requires '09444500' not '9444500'.
-                if (sJobCount) {
-                    sJobCount = String(sJobCount).padStart(8, "0");
-                }
-
-                if (!this._pJobLogDialog) {
-                    this._pJobLogDialog = Fragment.load({
-                        id: this.getView().getId(),
-                        name: "project5.ext.fragment.JobLog",
-                        controller: this
-                    }).then(function (oDialog) {
-                        this.getView().addDependent(oDialog);
-                        return oDialog;
-                    }.bind(this));
-                }
-
-                this._pJobLogDialog.then(function (oDialog) {
-                    var oLogTable = this.byId("jobLogTable");
-
-                    // Fix lỗi template trắng trơn
-                    if (!this._oLogTemplate) {
-                        this._oLogTemplate = oLogTable.getBindingInfo("items").template;
-                    }
-                    oLogTable.unbindItems();
-
-                    // Gửi Filter xuống ABAP
-                    var aFilters = [
-                        new Filter("JobName", FilterOperator.EQ, sJobName),
-                        new Filter("JobCount", FilterOperator.EQ, sJobCount)
-                    ];
-
-                    oLogTable.bindItems({
-                        path: "/JobLog",
-                        template: this._oLogTemplate,
-                        filters: aFilters
-                    });
-
-                    oDialog.setTitle("Job Log: " + sJobName + " / " + sJobCount);
-                    oDialog.open();
-                }.bind(this));
-            },
-
-            onCloseJobLog: function () {
-                this._pJobLogDialog.then(function (oDialog) {
-                    oDialog.close();
-                });
             },
 
             onAfterRendering: function () {
