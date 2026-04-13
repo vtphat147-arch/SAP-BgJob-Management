@@ -156,6 +156,11 @@
                                         <PropertyValue Property="ID" String="ExecDetails"/>
                                         <PropertyValue Property="Target" AnnotationPath="@UI.FieldGroup#FG_Start"/>
                                     </Record>
+                                    <Record Type="UI.ReferenceFacet">
+                                        <PropertyValue Property="Label" String="Schedule"/>
+                                        <PropertyValue Property="ID" String="ScheduleDetails"/>
+                                        <PropertyValue Property="Target" AnnotationPath="@UI.FieldGroup#FG_Schedule"/>
+                                    </Record>
                                 </Collection>
                             </PropertyValue>
                         </Record>
@@ -250,6 +255,19 @@
                     </Record>
                 </Annotation>
 
+                <Annotation Term="UI.FieldGroup" Qualifier="FG_Schedule">
+                    <Record>
+                        <PropertyValue Property="Data">
+                            <Collection>
+                                <Record Type="UI.DataField">
+                                    <PropertyValue Property="Value" Path="FrequencyText"/>
+                                    <PropertyValue Property="Label" String="Recurrence Pattern"/>
+                                </Record>
+                            </Collection>
+                        </PropertyValue>
+                    </Record>
+                </Annotation>
+
             </Annotations>
 
             <!-- ═══════════════════════════════════════════════════════ -->
@@ -257,6 +275,9 @@
             <!-- ═══════════════════════════════════════════════════════ -->
             <Annotations Target="SAP__self.JobListType/StatusText">
                 <Annotation Term="Common.Label" String="Status"/>
+            </Annotations>
+            <Annotations Target="SAP__self.JobListType/FrequencyText">
+                <Annotation Term="Common.Label" String="Frequency"/>
             </Annotations>
 
             <!-- ═══════════════════════════════════════════════════════ -->
