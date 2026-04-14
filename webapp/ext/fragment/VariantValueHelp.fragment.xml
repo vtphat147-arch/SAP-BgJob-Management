@@ -5,8 +5,7 @@
         class="sapUiPopupWithPadding"
         items="{path: '/Z_I_VariantVH', sorter: { path: 'VariantName' }}"
         search=".onVariantSearch"
-        confirm=".onVariantConfirm"
-        cancel=".onVariantCancel">
+        confirm=".onVariantConfirm">
         
         <!-- Định nghĩa các cột -->
         <columns>

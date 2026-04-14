@@ -83,10 +83,6 @@
           "autoExpandSelect": true,
           "earlyRequests": true
         }
-      },
-      "@i18n": {
-        "type": "sap.ui.model.resource.ResourceModel",
-        "uri": "i18n/i18n.properties"
       }
     },
     "resources": {
@@ -156,8 +152,7 @@
           "type": "View",
           "id": "CreateJobId",
           "name": "CreateJob",
-          "viewName": "project5.ext.main.CreateJob",
-          "viewId": "CreateJobId"
+          "viewName": "project5.ext.main.CreateJob"
         },
         "JobListObjectPage": {
           "type": "Component",

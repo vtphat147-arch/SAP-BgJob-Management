@@ -5,9 +5,10 @@ sap.ui.define(
         "sap/m/MessageBox",
         "sap/ui/model/Filter",
         "sap/ui/model/FilterOperator",
-        "sap/ui/core/Fragment"
+        "sap/ui/core/Fragment",
+        "sap/ui/core/BusyIndicator"
     ],
-    function (PageController, MessageToast, MessageBox, Filter, FilterOperator, Fragment) {
+    function (PageController, MessageToast, MessageBox, Filter, FilterOperator, Fragment, BusyIndicator) {
         'use strict';
 
         return PageController.extend('project5.ext.main.Main', {
@@ -152,7 +153,7 @@ sap.ui.define(
                 };
                 var iMessageCountBefore = fnGetMessages().length;
 
-                sap.ui.core.BusyIndicator.show(0);
+                BusyIndicator.show(0);
 
                 // --- DÙNG EXTENSION API VỚI ACTION ĐỘNG TỪ this._sCurrentAction ---
                 var oExtensionAPI = this.getExtensionAPI();
@@ -163,7 +164,7 @@ sap.ui.define(
                     parameterValues: aParameterValues,
                     skipParameterDialog: true
                 }).then(function () {
-                    sap.ui.core.BusyIndicator.hide();
+                    BusyIndicator.hide();
 
                     var aNewMessages = fnGetMessages().slice(iMessageCountBefore);
                     var bHasNewError = aNewMessages.some(function (oMsg) {
@@ -189,7 +190,7 @@ sap.ui.define(
                     that.onCloseReleaseDialog();
                     that._refreshTable();
                 }).catch(function (oError) {
-                    sap.ui.core.BusyIndicator.hide();
+                    BusyIndicator.hide();
                     that._bConfirmInFlight = false;
                     var sErrMsg = oError && oError.message ? oError.message : "Please try again.";
 

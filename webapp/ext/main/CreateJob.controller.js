@@ -79,13 +79,14 @@ sap.ui.define([
             oModel.setProperty("/recurrence", "Single Run");
         },
 
-        onProgramValueHelp: function (oEvent) {
+        // ========== HELPER: Mở Value Help Dialog (Dùng chung cho Program & Variant) ==========
+        _openValueHelp: function (sDialogKey, sFragmentName, aInitialFilters) {
             var oView = this.getView();
 
-            if (!this._pProgramDialog) {
-                this._pProgramDialog = Fragment.load({
+            if (!this["_p" + sDialogKey]) {
+                this["_p" + sDialogKey] = Fragment.load({
                     id: oView.getId(),
-                    name: "project5.ext.fragment.ProgramValueHelp",
+                    name: "project5.ext.fragment." + sFragmentName,
                     controller: this
                 }).then(function (oDialog) {
                     oView.addDependent(oDialog);
@@ -93,33 +94,37 @@ sap.ui.define([
                 });
             }
 
-            this._pProgramDialog.then(function (oDialog) {
-                // Clear filter cũ mỗi khi mở lại
-                oDialog.getBinding("items").filter([]);
+            this["_p" + sDialogKey].then(function (oDialog) {
+                oDialog.getBinding("items").filter(aInitialFilters || []);
                 oDialog.open();
             });
+        },
+
+        // ========== PROGRAM VALUE HELP ==========
+        onProgramValueHelp: function () {
+            this._openValueHelp("ProgramDialog", "ProgramValueHelp", []);
         },
 
         onProgramSearch: function (oEvent) {
             var sValue = oEvent.getParameter("value");
             var aFilters = [];
-
             if (sValue) {
-                var oFilterName = new Filter("ProgramName", FilterOperator.Contains, sValue);
-                var oFilterDesc = new Filter("Description", FilterOperator.Contains, sValue);
-                aFilters.push(new Filter({ filters: [oFilterName, oFilterDesc], and: false }));
+                aFilters.push(new Filter({
+                    filters: [
+                        new Filter("ProgramName", FilterOperator.Contains, sValue),
+                        new Filter("Description", FilterOperator.Contains, sValue)
+                    ],
+                    and: false
+                }));
             }
-
-            var oBinding = oEvent.getSource().getBinding("items");
-            oBinding.filter(aFilters);
+            oEvent.getSource().getBinding("items").filter(aFilters);
         },
 
         onProgramConfirm: function (oEvent) {
             var oSelectedItem = oEvent.getParameter("selectedItem");
             if (oSelectedItem) {
-                var sProgram = oSelectedItem.getCells()[0].getText();
                 var oModel = this.getView().getModel("local");
-                oModel.setProperty("/programName", sProgram);
+                oModel.setProperty("/programName", oSelectedItem.getCells()[0].getText());
                 oModel.setProperty("/variantName", "");
                 this.onCheckStep1();
             }
@@ -128,65 +133,39 @@ sap.ui.define([
         onProgramChange: function (oEvent) {
             var sValue = oEvent.getParameter("value");
             if (sValue) {
-                this.getView().getModel("local").setProperty("/programName", sValue.toUpperCase());
-                this.getView().getModel("local").setProperty("/variantName", "");
+                var oModel = this.getView().getModel("local");
+                oModel.setProperty("/programName", sValue.toUpperCase());
+                oModel.setProperty("/variantName", "");
             }
             this.onCheckStep1();
         },
 
-        onVariantValueHelp: function (oEvent) {
-            var oView = this.getView();
-            var sProgramName = oView.getModel("local").getProperty("/programName");
-
+        // ========== VARIANT VALUE HELP ==========
+        onVariantValueHelp: function () {
+            var sProgramName = this.getView().getModel("local").getProperty("/programName");
             if (!sProgramName) {
-                sap.m.MessageToast.show("Please enter Program Name before selecting a Variant.");
+                MessageToast.show("Please enter Program Name before selecting a Variant.");
                 return;
             }
-
-            if (!this._pVariantDialog) {
-                this._pVariantDialog = Fragment.load({
-                    id: oView.getId(),
-                    name: "project5.ext.fragment.VariantValueHelp",
-                    controller: this
-                }).then(function (oDialog) {
-                    oView.addDependent(oDialog);
-                    return oDialog;
-                });
-            }
-
-            this._pVariantDialog.then(function (oDialog) {
-                var oFilter = new Filter("ProgramName", FilterOperator.EQ, sProgramName);
-
-                var oBinding = oDialog.getBinding("items");
-
-                oBinding.filter([oFilter]);
-
-                oDialog.open();
-            });
+            this._openValueHelp("VariantDialog", "VariantValueHelp", [
+                new Filter("ProgramName", FilterOperator.EQ, sProgramName)
+            ]);
         },
 
         onVariantSearch: function (oEvent) {
             var sValue = oEvent.getParameter("value");
             var sProgramName = this.getView().getModel("local").getProperty("/programName");
-
-            var aFilters = [];
-            aFilters.push(new Filter("ProgramName", FilterOperator.EQ, sProgramName));
-
+            var aFilters = [new Filter("ProgramName", FilterOperator.EQ, sProgramName)];
             if (sValue) {
                 aFilters.push(new Filter("VariantName", FilterOperator.Contains, sValue));
             }
-
-            var oBinding = oEvent.getSource().getBinding("items");
-            oBinding.filter(aFilters);
+            oEvent.getSource().getBinding("items").filter(aFilters);
         },
 
         onVariantConfirm: function (oEvent) {
             var oSelectedItem = oEvent.getParameter("selectedItem");
-            if (!oSelectedItem) {
-                return;
-            }
-            var sVariant = oSelectedItem.getCells()[0].getText();
-            this.getView().getModel("local").setProperty("/variantName", sVariant);
+            if (!oSelectedItem) { return; }
+            this.getView().getModel("local").setProperty("/variantName", oSelectedItem.getCells()[0].getText());
             this.onCheckStep1();
         },
 

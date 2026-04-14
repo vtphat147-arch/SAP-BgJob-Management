@@ -5,8 +5,7 @@
         class="sapUiPopupWithPadding"
         items="{path: '/Z_I_ProgramVH', sorter: { path: 'ProgramName' }}"
         search=".onProgramSearch"
-        confirm=".onProgramConfirm"
-        cancel=".onProgramCancel">
+        confirm=".onProgramConfirm">
         
         <columns>
             <Column width="40%">
