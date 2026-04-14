@@ -7,24 +7,22 @@
     
     <Page id="wizardPage" title="New Background Job" showNavButton="true" navButtonPress=".onNavBack" class="sapUiResponsiveContentPadding">
         <content>
-            <Wizard id="CreateJobWizard" complete="onWizardCompleted">
+            <Wizard id="CreateJobWizard" complete="onWizardCompleted" finishButtonText="Schedule">
                 
                 <WizardStep id="Step1" title="Template Selection" validated="false" activate="onStep1Activate">
                     <f:SimpleForm editable="true" layout="ResponsiveGridLayout">
                         <f:content>
                             <Label text="Job Name" required="true"/>
                             <Input id="inpJobName" 
-                                value="{ path: 'local>/jobName', type: 'sap.ui.model.type.String' }" 
+                                value="{local>/jobName}" 
                                 liveChange=".onCheckStep1" 
-                                change=".onCheckStep1" 
                                 placeholder="Enter job name..."
                                 valueState="{= ${local>/jobName}.length > 0 ? 'None' : 'Error' }"
                                 valueStateText="Please enter a Job Name."/>
                             
                            <Label text="Program Name" required="true"/>
-                            <Input 
-                                id="inpProgram"
-                                value="{ path: 'local>/programName', type: 'sap.ui.model.type.String' }" 
+                            <Input id="inpProgram"
+                                value="{local>/programName}" 
                                 placeholder="Enter program name..." 
                                 showValueHelp="true" 
                                 valueHelpRequest=".onProgramValueHelp"
@@ -43,7 +41,7 @@
                         
                             <Label text="Variant Name" required="true"/>
                             <Input id="inpVariant" 
-                                value="{ path: 'local>/variantName', type: 'sap.ui.model.type.String' }" 
+                                value="{local>/variantName}" 
                                 placeholder="Select variant"
                                 showValueHelp="true" 
                                 change=".onCheckStep1"
@@ -54,7 +52,7 @@
                     </f:SimpleForm>
                 </WizardStep>
 
-                <WizardStep id="Step2" title="Scheduling Options" validated="true">
+                <WizardStep id="Step2" title="Scheduling Options" validated="true"> 
                     <Toolbar>
                         <ToolbarSpacer/>
                         <Button text="Define Recurrence Pattern" press=".onOpenScheduleDialog" type="Ghost"/>
@@ -100,7 +98,6 @@
         <footer>
             <OverflowToolbar>
                 <ToolbarSpacer/>
-                <Button text="Schedule" type="Emphasized" press=".onWizardCompleted"/>
                 <Button text="Cancel" press=".onNavBack"/>
             </OverflowToolbar>
         </footer>
