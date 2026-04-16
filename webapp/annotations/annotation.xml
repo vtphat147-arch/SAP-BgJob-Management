@@ -64,17 +64,17 @@
                         </Record>
                         <Record Type="UI.DataField">
                             <PropertyValue Property="Value" Path="StartDate"/>
-                            <PropertyValue Property="Label" String="{@i18n>startDate}"/>
+                            <PropertyValue Property="Label" String="Start Date"/>
                             <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/>
                         </Record>
                         <Record Type="UI.DataField">
                             <PropertyValue Property="Value" Path="StartTime"/>
-                            <PropertyValue Property="Label" String="{@i18n>startTime}"/>
+                            <PropertyValue Property="Label" String="Start Time"/>
                             <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/>
                         </Record>
                         <Record Type="UI.DataField">
                             <PropertyValue Property="Value" Path="DurationInSeconds"/>
-                            <PropertyValue Property="Label" String="{@i18n>duration}"/>
+                            <PropertyValue Property="Label" String="Duration"/>
                             <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/>
                         </Record>
                         <Record Type="UI.DataField">
@@ -84,7 +84,7 @@
                         </Record>
                         <Record Type="UI.DataField">
                             <PropertyValue Property="Value" Path="CreatedBy"/>
-                            <PropertyValue Property="Label" String="{@i18n>createdBy}"/>
+                            <PropertyValue Property="Label" String="Created By"/>
                             <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/>
                         </Record>
                     </Collection>

@@ -6,9 +6,10 @@ sap.ui.define(
         "sap/ui/model/Filter",
         "sap/ui/model/FilterOperator",
         "sap/ui/core/Fragment",
-        "sap/ui/core/BusyIndicator"
+        "sap/ui/core/BusyIndicator",
+        "sap/ui/model/json/JSONModel"
     ],
-    function (PageController, MessageToast, MessageBox, Filter, FilterOperator, Fragment, BusyIndicator) {
+    function (PageController, MessageToast, MessageBox, Filter, FilterOperator, Fragment, BusyIndicator, JSONModel) {
         'use strict';
 
         return PageController.extend('project5.ext.main.Main', {
@@ -276,28 +277,124 @@ sap.ui.define(
                     return;
                 }
 
+                if (aSelectedContexts.length > 1) {
+                    MessageToast.show("Only the first selected job will be copied.");
+                }
+
+                var oSelectedContext = aSelectedContexts[0];
+                var sOldJobName = oSelectedContext.getProperty("JobName") || "";
+
+                this._oCopySourceContext = oSelectedContext;
+                this._openCopyDialog(sOldJobName);
+            },
+
+            _openCopyDialog: function (sOldJobName) {
+                var oView = this.getView();
+                var oCopyModel = oView.getModel("copyJob");
+
+                if (!oCopyModel) {
+                    oCopyModel = new JSONModel({
+                        oldJobName: "",
+                        newJobName: ""
+                    });
+                    oView.setModel(oCopyModel, "copyJob");
+                }
+
+                oCopyModel.setData({
+                    oldJobName: sOldJobName,
+                    newJobName: sOldJobName
+                });
+
+                if (this._pCopyDialog) {
+                    this._pCopyDialog.then(function (oDialog) {
+                        oDialog.open();
+                        this._syncCopyDialogState();
+                    }.bind(this));
+                    return;
+                }
+
+                this._pCopyDialog = Fragment.load({
+                    id: oView.getId(),
+                    name: "project5.ext.fragment.CopyJobDialog",
+                    controller: this
+                }).then(function (oDialog) {
+                    oView.addDependent(oDialog);
+                    oDialog.open();
+                    this._syncCopyDialogState();
+                    return oDialog;
+                }.bind(this));
+            },
+
+            _syncCopyDialogState: function () {
+                var oInput = this.byId("copyJobNameInput");
+                var oDialog = this.byId("copyJobDialog");
+                var sValue = oInput ? (oInput.getValue() || "").trim() : "";
+                var bValid = !!sValue;
+
+                if (oInput) {
+                    oInput.setValueState(bValid ? "None" : "Error");
+                    oInput.setValueStateText("Job name is required.");
+                }
+
+                if (oDialog && oDialog.getBeginButton()) {
+                    oDialog.getBeginButton().setEnabled(bValid);
+                }
+            },
+
+            onCopyJobNameLiveChange: function () {
+                this._syncCopyDialogState();
+            },
+
+            onConfirmCopyJob: function () {
+                var oInput = this.byId("copyJobNameInput");
+                var sNewJobName = oInput ? (oInput.getValue() || "").trim() : "";
+                var oContext = this._oCopySourceContext;
+
+                if (!sNewJobName) {
+                    this._syncCopyDialogState();
+                    return;
+                }
+
+                if (!oContext) {
+                    MessageBox.error("Cannot find the selected job context.");
+                    return;
+                }
+
                 var that = this;
                 var oExtensionAPI = this.getExtensionAPI();
-
-                // Tên Action đầy đủ (Namespace.Action)
                 var sActionName = "com.sap.gateway.srvd.z_sd_job_ovp.v0001.CopyJob";
 
-                // Gọi CopyJob Action - SAP sẽ tự động bật Popup dựa trên Abstract Entity
-                // để nhập tham số NewJobName
-                oExtensionAPI.editFlow.invokeAction(sActionName, {
-                    contexts: [aSelectedContexts[0]] // Truyền Context của dòng được chọn
-                }).then(function () {
-                    // Thành công
-                    MessageToast.show("Copy and Rename completed successfully.");
+                BusyIndicator.show(0);
 
-                    // Job mới có thể có StartDate rỗng nên cần bỏ lọc StartDate để không bị ẩn.
+                oExtensionAPI.editFlow.invokeAction(sActionName, {
+                    contexts: [oContext],
+                    parameterValues: [
+                        { name: "NewJobName", value: sNewJobName }
+                    ],
+                    skipParameterDialog: true
+                }).then(function () {
+                    BusyIndicator.hide();
+                    MessageToast.show("Copy and Rename completed successfully.");
+                    that.onCloseCopyDialog();
                     that._clearStartDateFilter();
                     that._refreshTable();
                 }).catch(function (err) {
-                    // Nếu user cancel hoặc lỗi
+                    BusyIndicator.hide();
                     console.error("Copy Job error:", err);
-                    if (err && err.message && err.message.indexOf("cancelled") === -1) {
+                    if (!err || !err.message || err.message.indexOf("cancelled") === -1) {
                         MessageBox.error("Copy Job failed: " + (err.message || "Please try again."));
+                    }
+                });
+            },
+
+            onCloseCopyDialog: function () {
+                if (!this._pCopyDialog) {
+                    return;
+                }
+
+                this._pCopyDialog.then(function (oDialog) {
+                    if (oDialog && oDialog.isOpen()) {
+                        oDialog.close();
                     }
                 });
             },
