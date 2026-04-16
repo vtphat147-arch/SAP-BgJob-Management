@@ -491,6 +491,15 @@ sap.ui.define(
                 }
             },
 
+            // ==================== OPEN ANALYTICS MENU ====================
+            onOpenAnalyticsMenu: function(e) { this.byId("analyticsActionSheet").openBy(e.getSource()); },
+            onOpenDashboard: function() {
+                window.open("https://s40lp1.ucc.cit.tum.de/sap/bc/ui2/flp?sap-client=324&sap-language=EN#ZSO_JOB_F0703-display", "_self");
+            },
+            onOpenAnalytics: function() {
+                window.open("/sap/bc/ui5_ui5/sap/zui_j_analytics/?sap-client=324&sap-language=EN#/?sap-iapp-state--history=1", "_self");
+            },
+
             onAfterRendering: function () {
                 var oMacroTable = this.byId("Table");
                 if (oMacroTable) {
