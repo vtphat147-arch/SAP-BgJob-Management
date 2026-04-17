@@ -16,6 +16,7 @@ sap.ui.define([
                 jobName: "",
                 programName: "",
                 variantName: "",
+                showStep1Errors: false,
                 startImmediately: true,
                 startDate: new Date(),
                 recurrence: "Single Run"
@@ -26,11 +27,16 @@ sap.ui.define([
 
         onCheckStep1: function () {
             var oModel = this.getView().getModel("local");
-            var sJob = oModel.getProperty("/jobName");
-            var sProg = oModel.getProperty("/programName");
-            var sVariant = oModel.getProperty("/variantName");
+            var sJob = (oModel.getProperty("/jobName") || "").trim();
+            var sProg = (oModel.getProperty("/programName") || "").trim();
+            var sVariant = (oModel.getProperty("/variantName") || "").trim();
 
-            var bValid = sJob.length > 0 && sProg.length > 0 && sVariant.length > 0;
+            // Show Step 1 error states only after user starts interacting.
+            var bHasInteraction = sJob.length > 0 || sProg.length > 0 || sVariant.length > 0;
+            oModel.setProperty("/showStep1Errors", bHasInteraction);
+
+            // Variant is optional (SM36 behavior). Only Job Name + Program Name are required.
+            var bValid = sJob.length > 0 && sProg.length > 0;
             this.byId("Step1").setValidated(bValid);
         },
 

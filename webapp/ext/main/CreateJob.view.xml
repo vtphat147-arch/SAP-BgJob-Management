@@ -17,7 +17,7 @@
                                 value="{local>/jobName}" 
                                 liveChange=".onCheckStep1" 
                                 placeholder="Enter job name..."
-                                valueState="{= ${local>/jobName}.length > 0 ? 'None' : 'Error' }"
+                                valueState="{= ${local>/showStep1Errors} &amp;&amp; ${local>/jobName}.length === 0 ? 'Error' : 'None' }"
                                 valueStateText="Please enter a Job Name."/>
                             
                            <Label text="Program Name" required="true"/>
@@ -29,7 +29,7 @@
                                 change=".onProgramChange" 
                                 showSuggestion="true"
                                 suggestionItems="{/Z_I_ProgramVH}" 
-                                valueState="{= ${local>/programName}.length > 0 ? 'None' : 'Error' }"
+                                valueState="{= ${local>/showStep1Errors} &amp;&amp; ${local>/programName}.length === 0 ? 'Error' : 'None' }"
                                 valueStateText="Please enter or select a Program Name.">
 
                                 
@@ -39,15 +39,14 @@
                                 </suggestionItems>
                             </Input>
                         
-                            <Label text="Variant Name" required="true"/>
+                            <Label text="Variant Name" required="false"/>
                             <Input id="inpVariant" 
                                 value="{local>/variantName}" 
                                 placeholder="Select variant"
                                 showValueHelp="true" 
                                 change=".onCheckStep1"
                                 valueHelpRequest=".onVariantValueHelp"
-                                valueState="{= ${local>/variantName}.length > 0 ? 'None' : 'Error' }"
-                                valueStateText="Please select a Variant."/>
+                                valueState="None"/>
                         </f:content>
                     </f:SimpleForm>
                 </WizardStep>
