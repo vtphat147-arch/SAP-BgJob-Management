@@ -1,0 +1,58 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <Dialog
+        id="copyJobDialog"
+        title="Copy Job"
+        contentWidth="30rem"
+        contentHeight="auto"
+        draggable="true"
+        resizable="true"
+    >
+        <content>
+            <VBox class="sapUiSmallMargin">
+                <ObjectStatus
+                    title="Source Job"
+                    text="{copyJob>/oldJobName}"
+                    state="Information"
+                    class="sapUiTinyMarginBottom"
+                />
+                <Label
+                    text="New Job Name"
+                    labelFor="copyJobNameInput"
+                    required="true"
+                    design="Bold"
+                />
+                <Input
+                    id="copyJobNameInput"
+                    value="{copyJob>/newJobName}"
+                    placeholder="Enter new job name"
+                    width="100%"
+                    valueLiveUpdate="true"
+                    liveChange=".onCopyJobNameLiveChange"
+                    showClearIcon="true"
+                    maxLength="32"
+                    class="sapUiTinyMarginTop"
+                />
+                <Text
+                    text="You can edit the copied job name before confirmation."
+                    class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiContentLabel"
+                />
+            </VBox>
+        </content>
+        <beginButton>
+            <Button
+                text="Copy"
+                type="Emphasized"
+                press=".onConfirmCopyJob"
+            />
+        </beginButton>
+        <endButton>
+            <Button
+                text="Cancel"
+                press=".onCloseCopyDialog"
+            />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>
