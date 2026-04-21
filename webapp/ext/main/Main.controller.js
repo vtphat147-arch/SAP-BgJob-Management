@@ -185,8 +185,16 @@ sap.ui.define(
                         return;
                     }
 
-                    var sActionLabel = (sCurrentAction.indexOf("Repeat") !== -1) ? "Repeat Job" : "Release Job";
-                    MessageToast.show(sActionLabel + " completed successfully.");
+                    // Read BE success message from Message Class
+                    var aSuccessMsgs = fnGetMessages().slice(iMessageCountBefore).filter(function (m) {
+                        return m.type === "Success";
+                    });
+                    if (aSuccessMsgs.length > 0) {
+                        MessageToast.show(aSuccessMsgs.map(function (m) { return m.message; }).join("\n"));
+                    } else {
+                        var sActionLabel = (sCurrentAction.indexOf("Repeat") !== -1) ? "Repeat Job" : "Release Job";
+                        MessageToast.show(sActionLabel + " completed successfully.");
+                    }
                     that._bConfirmInFlight = false;
                     that.onCloseReleaseDialog();
                     that._refreshTable();
@@ -218,21 +226,21 @@ sap.ui.define(
                 }.bind(this));
             },
 
-            // ==================== HELPER: Gọi Bound Action cho nhiều dòng (DỄ HIỂU) ====================
+            // ==================== HELPER: Gọi Bound Action cho nhiều dòng ====================
             _executeAction: async function (aContexts, sActionName, sLabel, oOptions) {
                 var aSuccess = [];
                 var aFailed = [];
 
-                // --- 0. Dọn dẹp các thông báo lỗi cũ trên giao diện (để không bị hiện thanh thông báo đỏ/vàng) ---
+                // --- 0. Clear old messages ---
                 var oMessageManager = sap.ui.getCore().getMessageManager();
                 oMessageManager.removeAllMessages();
 
-                // Chạy từng Job một (Tuần tự) để tránh lỗi Batch SAP
+                // Execute sequentially to avoid SAP batch errors
                 for (var oContext of aContexts) {
                     var sJobName = oContext.getProperty("JobName") || "(unknown)";
                     try {
                         var oActionContext = oContext.getModel().bindContext(sActionName + "(...)", oContext);
-                        await oActionContext.execute(); // Chờ thằng này chạy xong mới qua thằng kế
+                        await oActionContext.execute();
                         aSuccess.push(sJobName);
                     } catch (oError) {
                         var sErr = oError?.error?.message || oError?.message || "Unknown error";
@@ -240,13 +248,28 @@ sap.ui.define(
                     }
                 }
 
-                // Hiển thị kết quả sau khi chạy xong hết
-                if (aSuccess.length > 0) {
-                    MessageToast.show(sLabel + " xong cho: " + aSuccess.join(", "));
+                // --- Read messages returned by BE (from Message Class ZCM_BC_BJSMS_MSG) ---
+                var aMessages = oMessageManager.getMessageModel().getData() || [];
+                var aSuccessMessages = aMessages.filter(function (m) { return m.type === "Success"; });
+                var aErrorMessages = aMessages.filter(function (m) { return m.type === "Error"; });
+
+                // Show BE success messages
+                if (aSuccessMessages.length > 0) {
+                    var sSuccessText = aSuccessMessages.map(function (m) { return m.message; }).join("\n");
+                    MessageToast.show(sSuccessText);
+                } else if (aSuccess.length > 0) {
+                    // Fallback if BE didn't return specific messages
+                    MessageToast.show(sLabel + " completed for: " + aSuccess.join(", "));
                 }
-                if (aFailed.length > 0) {
+
+                // Show BE error messages
+                if (aErrorMessages.length > 0) {
+                    var sErrorText = aErrorMessages.map(function (m) { return "• " + m.message; }).join("\n");
+                    MessageBox.error(sErrorText);
+                } else if (aFailed.length > 0) {
+                    // Fallback
                     var sErrors = aFailed.map(function (r) { return "• " + r.name + ": " + r.error; }).join("\n");
-                    MessageBox.error(sLabel + " thất bại cho " + aFailed.length + " job:\n\n" + sErrors);
+                    MessageBox.error(sLabel + " failed for " + aFailed.length + " job(s):\n\n" + sErrors);
                 }
 
                 this._refreshTable();
@@ -374,7 +397,14 @@ sap.ui.define(
                     skipParameterDialog: true
                 }).then(function () {
                     BusyIndicator.hide();
-                    MessageToast.show("Copy and Rename completed successfully.");
+                    // Read BE success message from Message Class
+                    var oMsgMgr = sap.ui.getCore().getMessageManager();
+                    var aMsgs = (oMsgMgr.getMessageModel().getData() || []).filter(function (m) { return m.type === "Success"; });
+                    if (aMsgs.length > 0) {
+                        MessageToast.show(aMsgs.map(function (m) { return m.message; }).join("\n"));
+                    } else {
+                        MessageToast.show("Copy and Rename completed successfully.");
+                    }
                     that.onCloseCopyDialog();
                     that._clearStartDateFilter();
                     that._refreshTable();

@@ -189,100 +189,54 @@ sap.ui.define([
             var oView = this.getView();
             var oLocalData = oView.getModel("local").getData();
             var oODataModel = oView.getModel();
-
-            oView.setBusy(true);
             var that = this;
 
+            oView.setBusy(true);
+
             try {
-                // a. Xử lý Date + Time từ DateTimePicker
-                var oDate = oLocalData.startDate || new Date();
+                // 1. Convert date → SAP server timezone (Europe/Berlin, auto DST)
+                var oDate = oLocalData.startDate ? new Date(oLocalData.startDate) : new Date();
+                if (isNaN(oDate.getTime())) { oDate = new Date(); }
 
-                // DateTimePicker có thể trả string, chuyển về Date object
-                if (typeof oDate === "string") {
-                    oDate = new Date(oDate);
-                }
-                if (!(oDate instanceof Date) || isNaN(oDate.getTime())) {
-                    oDate = new Date();
-                }
-
-                // SAP server runs on Europe/Berlin timezone (CET in winter, CEST in summer)
-                // User is in GMT+7. Must convert local time → SAP server time.
-                // Using Intl API to auto-handle DST (CET=UTC+1 / CEST=UTC+2)
-                var oFormatter = new Intl.DateTimeFormat('en-CA', {
+                var oParts = {};
+                new Intl.DateTimeFormat('en-CA', {
                     timeZone: 'Europe/Berlin',
                     year: 'numeric', month: '2-digit', day: '2-digit',
                     hour: '2-digit', minute: '2-digit', second: '2-digit',
                     hour12: false
-                });
-                var aParts = oFormatter.formatToParts(oDate);
-                var oParts = {};
-                aParts.forEach(function (p) { oParts[p.type] = p.value; });
+                }).formatToParts(oDate).forEach(function (p) { oParts[p.type] = p.value; });
 
                 var sStartDate = oParts.year + "-" + oParts.month + "-" + oParts.day;
                 var sStartTime = oParts.hour + ":" + oParts.minute + ":" + oParts.second;
 
-
-
-                // c. Xử lý IsImmediate: Metadata là String(1), KHÔNG PHẢI Boolean
-                // Quy ước: Chạy ngay = "X", Chạy lịch = ""
-                var sIsImmediate = oLocalData.startImmediately ? "X" : "";
-
-                var sActionPath = "/JobList/com.sap.gateway.srvd.z_sd_job_ovp.v0001.ScheduleJob(...)";
-                var oActionContext = oODataModel.bindContext(sActionPath);
-
-                // 3. TRUYỀN THAM SỐ (Mapping chính xác từng dòng)
-                oActionContext.setParameter("JobName", oLocalData.jobName || "New Job");
-                oActionContext.setParameter("ProgramName", oLocalData.programName);
-                oActionContext.setParameter("VariantName", oLocalData.variantName || "");
-
-                oActionContext.setParameter("IsImmediate", sIsImmediate);
-
-                oActionContext.setParameter("StartDate", sStartDate);
-                oActionContext.setParameter("StartTime", sStartTime);
-
-                // Xử lý FrequencyType + FrequencyValue (BẮT BUỘC trong Z_A_JOB_REQ)
+                // 2. Frequency mapping (recurrence → SAP FrequencyType)
+                var mFreqMap = { "Minutes": "MINUTES", "Hourly": "HOURLY", "Daily": "DAILY", "Weekly": "WEEKLY", "Monthly": "MONTHLY" };
                 var sRecurrence = oLocalData.recurrence || "Single Run";
-                var sFreqType = "";
-                var iFreqValue = 0;
+                var sFreqType = mFreqMap[sRecurrence] || "";
+                var iFreqValue = sFreqType ? (parseInt(oLocalData.frequency) || 1) : 0;
 
-                switch (sRecurrence) {
-                    case "Minutes":       sFreqType = "MINUTES"; iFreqValue = parseInt(oLocalData.frequency) || 1; break;
-                    case "Hourly":        sFreqType = "HOURLY";  iFreqValue = parseInt(oLocalData.frequency) || 1; break;
-                    case "Daily":         sFreqType = "DAILY";   iFreqValue = parseInt(oLocalData.frequency) || 1; break;
-                    case "Weekly":        sFreqType = "WEEKLY";  iFreqValue = parseInt(oLocalData.frequency) || 1; break;
-                    case "Monthly":       sFreqType = "MONTHLY"; iFreqValue = parseInt(oLocalData.frequency) || 1; break;
-                    default:              sFreqType = "";        iFreqValue = 0; break;
-                }
+                // 3. Build & execute OData action
+                var oAction = oODataModel.bindContext(
+                    "/JobList/com.sap.gateway.srvd.z_sd_job_ovp.v0001.ScheduleJob(...)"
+                );
 
-                oActionContext.setParameter("FrequencyType", sFreqType);
-                oActionContext.setParameter("FrequencyValue", iFreqValue);
+                oAction.setParameter("JobName", oLocalData.jobName || "New Job");
+                oAction.setParameter("ProgramName", oLocalData.programName);
+                oAction.setParameter("VariantName", oLocalData.variantName || "");
+                oAction.setParameter("IsImmediate", oLocalData.startImmediately ? "X" : "");
+                oAction.setParameter("StartDate", sStartDate);
+                oAction.setParameter("StartTime", sStartTime);
+                oAction.setParameter("FrequencyType", sFreqType);
+                oAction.setParameter("FrequencyValue", iFreqValue);
 
-
-
-                // 5. THỰC THI VÀ CHỜ KẾT QUẢ (Promise)
-                oActionContext.execute().then(function () {
-                    // --- THÀNH CÔNG (Backend trả về HTTP 2xx) ---
-                    // Lưu ý: Nếu muốn lấy message thành công từ Backend gửi lên header sap-messages,
-                    // OData V4 model thường tự động xử lý và hiện MessageToast nếu configured.
-                    // Tuy nhiên ta cứ hiện thủ công cho chắc chắn.
+                oAction.execute().then(function () {
                     MessageToast.show("Job created successfully!");
-
-                    // Reset wizard và quay lại
                     that.onNavBack();
 
                 }).catch(function (oError) {
-                    // --- THẤT BẠI (Backend trả về HTTP 4xx/5xx hoặc có lỗi trong failed table) ---
                     console.error("Job Creation Failed:", oError);
-
-                    // Trích xuất thông báo lỗi từ OData V4 response
-                    var sErrorMsg = "Unknown error occurred.";
-                    if (oError.error && oError.error.message) {
-                        sErrorMsg = oError.error.message;
-                    } else if (oError.message) {
-                        sErrorMsg = oError.message;
-                    }
-
-                    MessageBox.error("Failed to schedule job.\n\n" + sErrorMsg);
+                    var sMsg = (oError.error && oError.error.message) || oError.message || "Unknown error";
+                    MessageBox.error("Failed to schedule job.\n\n" + sMsg);
 
                 }).finally(function () {
                     oView.setBusy(false);
