@@ -12,6 +12,16 @@ sap.ui.define(
 
         return PageController.extend('project5.ext.main.Main', {
 
+            // ==================== I18N HELPER ====================
+            _getText: function (sKey, aArgs) {
+                var oModel = this.getView().getModel("i18n");
+                if (!oModel) {
+                    var oComp = this.getOwnerComponent();
+                    if (oComp) { oModel = oComp.getModel("i18n"); }
+                }
+                return oModel ? oModel.getResourceBundle().getText(sKey, aArgs) : sKey;
+            },
+
             // ==================== REFRESH ====================
             onRefreshTable: function () {
                 this._refreshTable();
@@ -30,13 +40,13 @@ sap.ui.define(
                 var aSelectedContexts = oTable.getSelectedContexts();
 
                 if (aSelectedContexts.length === 0) {
-                    MessageToast.show("Please select a job.");
+                    MessageToast.show(this._getText("msgSelectJob"));
                     return;
                 }
 
                 this._openActionDialog(
                     "com.sap.gateway.srvd.z_sd_job_ovp.v0001.ReleaseJob",
-                    "Define Start Condition"
+                    this._getText("titleDefineStartCondition")
                 );
             },
 
@@ -46,7 +56,7 @@ sap.ui.define(
                 var aSelectedContexts = oTable.getSelectedContexts();
 
                 if (aSelectedContexts.length === 0) {
-                    MessageToast.show("Please select a job.");
+                    MessageToast.show(this._getText("msgSelectJob"));
                     return;
                 }
 
@@ -88,7 +98,7 @@ sap.ui.define(
                 var aSelectedContexts = this._selectedContexts || [];
 
                 if (!aSelectedContexts.length) {
-                    MessageToast.show("Please select a job.");
+                    MessageToast.show(this._getText("msgSelectJob"));
                     this._bConfirmInFlight = false;
                     return;
                 }
@@ -128,7 +138,7 @@ sap.ui.define(
 
                 // --- 4. VALIDATE: Nếu không phải Immediate thì phải có Date và Time ---
                 if (!bIsImmediate && (!sSapDate || !sSapTime)) {
-                    MessageToast.show("Please enter start date and start time.");
+                    MessageToast.show(this._getText("msgEnterDateTime"));
                     this._bConfirmInFlight = false;
                     return;
                 }
@@ -191,7 +201,7 @@ sap.ui.define(
                 }).catch(function (oError) {
                     sap.ui.core.BusyIndicator.hide();
                     that._bConfirmInFlight = false;
-                    var sErrMsg = oError && oError.message ? oError.message : "Please try again.";
+                    var sErrMsg = oError && oError.message ? oError.message : this._getText("msgPleaseTryAgain");
 
                     // Bỏ qua lỗi đồng bộ trạng thái action (metadata/cache) để tránh popup lỗi xám.
                     if (sErrMsg.toLowerCase().includes("enabled")) {
@@ -200,7 +210,7 @@ sap.ui.define(
                     }
 
                     console.error("Action error details:", oError);
-                    MessageBox.error("Execution failed: " + sErrMsg);
+                    MessageBox.error(this._getText("msgExecutionFailed", [sErrMsg]));
                 });
             },
 
@@ -233,7 +243,7 @@ sap.ui.define(
                         await oActionContext.execute(); // Chờ thằng này chạy xong mới qua thằng kế
                         aSuccess.push(sJobName);
                     } catch (oError) {
-                        var sErr = oError?.error?.message || oError?.message || "Unknown error";
+                        var sErr = oError?.error?.message || oError?.message || this._getText("msgUnknownError");
                         aFailed.push({ name: sJobName, error: sErr });
                     }
                 }
@@ -256,13 +266,13 @@ sap.ui.define(
                 var aSelectedContexts = oTable.getSelectedContexts();
 
                 if (aSelectedContexts.length === 0) {
-                    MessageToast.show("Please select at least one job to repeat.");
+                    MessageToast.show(this._getText("msgSelectJobRepeat"));
                     return;
                 }
 
                 this._openActionDialog(
                     "com.sap.gateway.srvd.z_sd_job_ovp.v0001.RepeatWithSchedule",
-                    "Define Start Condition for Repeat Job"
+                    this._getText("titleDefineStartConditionRepeat")
                 );
             },
 
@@ -271,7 +281,7 @@ sap.ui.define(
                 var aSelectedContexts = this.byId("Table").getSelectedContexts();
 
                 if (aSelectedContexts.length === 0) {
-                    MessageToast.show("Please select at least one job to copy.");
+                    MessageToast.show(this._getText("msgSelectJobCopy"));
                     return;
                 }
 
@@ -287,7 +297,7 @@ sap.ui.define(
                     contexts: [aSelectedContexts[0]] // Truyền Context của dòng được chọn
                 }).then(function () {
                     // Thành công
-                    MessageToast.show("Copy and Rename completed successfully.");
+                    MessageToast.show(this._getText("msgCopyRenameCompleted"));
 
                     // Job mới có thể có StartDate rỗng nên cần bỏ lọc StartDate để không bị ẩn.
                     that._clearStartDateFilter();
@@ -296,7 +306,7 @@ sap.ui.define(
                     // Nếu user cancel hoặc lỗi
                     console.error("Copy Job error:", err);
                     if (err && err.message && err.message.indexOf("cancelled") === -1) {
-                        MessageBox.error("Copy Job failed: " + (err.message || "Please try again."));
+                        MessageBox.error(this._getText("msgCopyJobFailed", [err.message || this._getText("msgPleaseTryAgain")]));
                     }
                 });
             },
@@ -367,20 +377,20 @@ sap.ui.define(
                 var aSelectedContexts = oTable.getSelectedContexts();
 
                 if (aSelectedContexts.length === 0) {
-                    MessageToast.show("Please select at least one job to stop.");
+                    MessageToast.show(this._getText("msgSelectJobStop"));
                     return;
                 }
 
                 var iCount = aSelectedContexts.length;
-                var sMessage = "Do you want to stop " + iCount + " selected job(s)?";
+                var sMessage = this._getText("msgConfirmStop", [iCount]);
 
                 var that = this;
                 MessageBox.confirm(sMessage, {
-                    title: "Confirm Stop Job",
+                    title: this._getText("titleConfirmStop"),
                     emphasizedAction: MessageBox.Action.OK,
                     onClose: function (sAction) {
                         if (sAction === MessageBox.Action.OK) {
-                            that._executeAction(aSelectedContexts, "com.sap.gateway.srvd.z_sd_job_ovp.v0001.StopJob", "Stop");
+                            that._executeAction(aSelectedContexts, "com.sap.gateway.srvd.z_sd_job_ovp.v0001.StopJob", that._getText("lblStop"));
                         }
                     }
                 });
@@ -391,20 +401,20 @@ sap.ui.define(
                 var oTable = this.byId("Table");
                 var aSelectedContexts = oTable.getSelectedContexts();
                 if (aSelectedContexts.length === 0) {
-                    MessageToast.show("Please select at least one job to delete.");
+                    MessageToast.show(this._getText("msgSelectJobDelete"));
                     return;
                 }
 
                 var iCount = aSelectedContexts.length;
-                var sMessage = "Do you want to delete " + iCount + " selected job(s)?";
+                var sMessage = this._getText("msgConfirmDelete", [iCount]);
 
                 var that = this;
                 MessageBox.confirm(sMessage, {
-                    title: "Confirm Delete Job",
+                    title: this._getText("titleConfirmDelete"),
                     emphasizedAction: MessageBox.Action.OK,
                     onClose: function (sAction) {
                         if (sAction === MessageBox.Action.OK) {
-                            that._executeAction(aSelectedContexts, "com.sap.gateway.srvd.z_sd_job_ovp.v0001.DeleteJob", "Delete");
+                            that._executeAction(aSelectedContexts, "com.sap.gateway.srvd.z_sd_job_ovp.v0001.DeleteJob", that._getText("lblDelete"));
                         }
                     }
                 });
@@ -431,7 +441,7 @@ sap.ui.define(
                 } else {
                     // Nếu chạy chay (index.html) không có FLP, đành chịu không biết ai đăng nhập
                     sCurrentUser = "";
-                    MessageToast.show("Warning: Not running in Fiori Launchpad. Cannot detect current user.");
+                    MessageToast.show(this._getText("msgWarningNoFLP"));
                 }
 
                 if (!sCurrentUser) {
@@ -456,12 +466,12 @@ sap.ui.define(
                     if (this._bFilteringOwnJobs) {
                         oBinding.filter([], "Application");
                         this._bFilteringOwnJobs = false;
-                        MessageToast.show("Showing all jobs.");
+                        MessageToast.show(this._getText("msgShowingAllJobs"));
                     } else {
                         var oFilter = new Filter("CreatedBy", FilterOperator.EQ, sCurrentUser);
                         oBinding.filter(oFilter, "Application");
                         this._bFilteringOwnJobs = true;
-                        MessageToast.show("Filtering jobs by: " + sCurrentUser);
+                        MessageToast.show(this._getText("msgFilteringBy", [sCurrentUser]));
                     }
                 }
             },

@@ -13,12 +13,12 @@
             </f:DynamicPageHeader>
         </f:header>
         <f:content>
-            <macros:Table id="Table" rowPress=".onRowPress" metaPath="/JobList/@com.sap.vocabularies.UI.v1.LineItem#tableMacro2" filterBar="FilterBar" header="Background Jobs" isSearchable="false" type="ResponsiveTable" enableFullScreen="true" enableExport="true" selectionMode="Multi" variantManagement="Page">
+            <macros:Table id="Table" rowPress=".onRowPress" metaPath="/JobList/@com.sap.vocabularies.UI.v1.LineItem#tableMacro2" filterBar="FilterBar" header="{i18n>backgroundJobs}" isSearchable="false" type="ResponsiveTable" enableFullScreen="true" enableExport="true" selectionMode="Multi" variantManagement="Page">
                 <macros:actions>
-                    <Button text="🔄 Refresh" type="Transparent" press="onRefreshTable"/>
-                    <Button id="btnManage" text="⚙️ Manage" type="Default" press="onOpenManageMenu"/>
-                    <Button text="👤 My Jobs" type="Emphasized" press="onFilterOwnJobs"/>
-                    <Button text="📅 Schedule" type="Success" press="onCreateJob"/>
+                    <Button text="{i18n>btnRefresh}" icon="sap-icon://refresh" type="Transparent" press="onRefreshTable"/>
+                    <Button id="btnManage" text="{i18n>btnManage}" icon="sap-icon://action" type="Default" press="onOpenManageMenu"/>
+                    <Button text="{i18n>btnMyJobs}" icon="sap-icon://employee" type="Emphasized" press="onFilterOwnJobs"/>
+                    <Button text="{i18n>btnSchedule}" icon="sap-icon://calendar" type="Success" press="onCreateJob"/>
                 </macros:actions>
             </macros:Table>
         </f:content>
@@ -28,11 +28,11 @@
     <mvc:dependents>
         <ActionSheet id="manageActionSheet" placement="Bottom">
             <buttons>
-                <Button text="▶️ Release" press="onReleaseJob"/>
-                <Button text="🔁 Repeat"  press="onRepeatJob"/>
-                <Button text="📄 Copy" press="onCopyWithRename"/>
-                <Button text="⏹️ Stop" type="Attention" press="onStopJob"/>
-                <Button text="🗑️ Delete" type="Reject" press="onDeleteJob"/>
+                <Button text="{i18n>btnRelease}" icon="sap-icon://media-play" press="onReleaseJob"/>
+                <Button text="{i18n>btnRepeat}" icon="sap-icon://synchronize"  press="onRepeatJob"/>
+                <Button text="{i18n>btnCopy}" icon="sap-icon://copy" press="onCopyWithRename"/>
+                <Button text="{i18n>btnStop}" icon="sap-icon://stop" type="Attention" press="onStopJob"/>
+                <Button text="{i18n>btnDelete}" icon="sap-icon://delete" type="Reject" press="onDeleteJob"/>
             </buttons>
         </ActionSheet>
     </mvc:dependents>
