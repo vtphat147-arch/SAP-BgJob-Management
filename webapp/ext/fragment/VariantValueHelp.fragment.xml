@@ -8,7 +8,7 @@
         confirm=".onVariantConfirm"
         cancel=".onVariantCancel">
         
-        <!-- Định nghĩa các cột -->
+        <!-- Define columns -->
         <columns>
             <Column width="40%">
                 <header><Text text="Variant Name" /></header>
@@ -18,7 +18,7 @@
             </Column>                           
         </columns>
 
-        <!-- Định nghĩa dòng dữ liệu -->
+        <!-- Define data rows -->
         <ColumnListItem type="Active">
             <cells>
                 <Text text="{VariantName}" />

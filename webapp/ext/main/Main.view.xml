@@ -24,7 +24,7 @@
         </f:content>
     </f:DynamicPage>
 
-    <!-- Thêm Menu ẩn (ActionSheet) ở đây, sẽ được gọi lên khi bấm nút Manage -->
+    <!-- Add hidden ActionSheet Menu here, triggered by Manage button -->
     <mvc:dependents>
         <ActionSheet id="manageActionSheet" placement="Bottom">
             <buttons>

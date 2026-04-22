@@ -7,7 +7,7 @@
                     <Label text="Start Immediately"/>
                     <CheckBox selected="{local>/startImmediately}" select=".onCheckImmediate"/>
 
-                    <!-- Date Picker: Ẩn/Hiện dựa vào checkbox trên -->
+                    <!-- Date Picker: Show/Hide based on checkbox above -->
                     <Label text="Job Start (Local Time)"/>
                     <DateTimePicker 
                         dateValue="{local>/startDate}" 

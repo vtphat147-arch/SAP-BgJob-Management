@@ -94,7 +94,7 @@ sap.ui.define([
             }
 
             this._pProgramDialog.then(function (oDialog) {
-                // Clear filter cũ mỗi khi mở lại
+                // Clear old filter when reopening
                 oDialog.getBinding("items").filter([]);
                 oDialog.open();
             });
@@ -209,10 +209,10 @@ sap.ui.define([
             var that = this;
 
             try {
-                // a. Xử lý Date + Time từ DateTimePicker
+                // a. Process Date + Time from DateTimePicker
                 var oDate = oLocalData.startDate || new Date();
 
-                // DateTimePicker có thể trả string, chuyển về Date object
+                // DateTimePicker may return a string, convert to Date object
                 if (typeof oDate === "string") {
                     oDate = new Date(oDate);
                 }
@@ -221,7 +221,7 @@ sap.ui.define([
                 }
 
                 // SAP server runs on Europe/Berlin timezone (CET in winter, CEST in summer)
-                // User is in GMT+7. Must convert local time → SAP server time.
+                // User is in GMT+7. Must convert local time -> SAP server time.
                 // Using Intl API to auto-handle DST (CET=UTC+1 / CEST=UTC+2)
                 var oFormatter = new Intl.DateTimeFormat('en-CA', {
                     timeZone: 'Europe/Berlin',
@@ -238,14 +238,14 @@ sap.ui.define([
 
 
 
-                // c. Xử lý IsImmediate: Metadata là String(1), KHÔNG PHẢI Boolean
-                // Quy ước: Chạy ngay = "X", Chạy lịch = ""
+                // c. Process IsImmediate: Metadata is String(1), NOT Boolean
+                // Convention: Run immediately = "X", Scheduled = ""
                 var sIsImmediate = oLocalData.startImmediately ? "X" : "";
 
                 var sActionPath = "/JobList/com.sap.gateway.srvd.z_sd_job_ovp.v0001.ScheduleJob(...)";
                 var oActionContext = oODataModel.bindContext(sActionPath);
 
-                // 3. TRUYỀN THAM SỐ (Mapping chính xác từng dòng)
+                // 3. PASS PARAMETERS (Exact mapping per row)
                 oActionContext.setParameter("JobName", oLocalData.jobName || "New Job");
                 oActionContext.setParameter("ProgramName", oLocalData.programName);
                 oActionContext.setParameter("VariantName", oLocalData.variantName || "");
@@ -255,7 +255,7 @@ sap.ui.define([
                 oActionContext.setParameter("StartDate", sStartDate);
                 oActionContext.setParameter("StartTime", sStartTime);
 
-                // Xử lý FrequencyType + FrequencyValue (BẮT BUỘC trong Z_A_JOB_REQ)
+                // Process FrequencyType + FrequencyValue (MANDATORY in Z_A_JOB_REQ)
                 var sRecurrence = oLocalData.recurrence || "Single Run";
                 var sFreqType = "";
                 var iFreqValue = 0;
@@ -274,22 +274,22 @@ sap.ui.define([
 
 
 
-                // 5. THỰC THI VÀ CHỜ KẾT QUẢ (Promise)
+                // 5. EXECUTE AND AWAIT RESULT (Promise)
                 oActionContext.execute().then(function () {
-                    // --- THÀNH CÔNG (Backend trả về HTTP 2xx) ---
-                    // Lưu ý: Nếu muốn lấy message thành công từ Backend gửi lên header sap-messages,
-                    // OData V4 model thường tự động xử lý và hiện MessageToast nếu configured.
-                    // Tuy nhiên ta cứ hiện thủ công cho chắc chắn.
+                    // --- SUCCESS (Backend returns HTTP 2xx) ---
+                    // Note: To get success messages from Backend sent in sap-messages header,
+                    // OData V4 model usually automatically processes and shows MessageToast if configured.
+                    // However, we display it manually to be sure.
                     MessageToast.show("Job created successfully!");
 
-                    // Reset wizard và quay lại
+                    // Reset wizard and return
                     that.onNavBack();
 
                 }).catch(function (oError) {
-                    // --- THẤT BẠI (Backend trả về HTTP 4xx/5xx hoặc có lỗi trong failed table) ---
+                    // --- FAILURE (Backend returns HTTP 4xx/5xx or failed table errors) ---
                     console.error("Job Creation Failed:", oError);
 
-                    // Trích xuất thông báo lỗi từ OData V4 response
+                    // Extract error message from OData V4 response
                     var sErrorMsg = "Unknown error occurred.";
                     if (oError.error && oError.error.message) {
                         sErrorMsg = oError.error.message;

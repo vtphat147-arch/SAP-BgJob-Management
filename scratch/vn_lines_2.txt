@@ -1,0 +1,2 @@
+
+--- Main.controller.js ---var sErrors = aFailed.map(function (r) { return "• " + r.name + ": " + r.error; }).join("\n");

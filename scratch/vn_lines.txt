@@ -1,0 +1,83 @@
+
+--- annotation.xml ---                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                        <!-- Khối 2 hộp thông tin nằm ngang -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- ═══════════════════════════════════════════════════ -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- 🔄 THAY TotalPages -> PaperFormat -->
+
+--- SchedulingDialog.fragment.xml ---                    <!-- Date Picker: Ẩn/Hiện dựa vào checkbox trên -->
+
+--- VariantValueHelp.fragment.xml ---        <!-- Định nghĩa các cột -->
+        <!-- Định nghĩa dòng dữ liệu -->
+
+--- CreateJob.controller.js ---                // Clear filter cũ mỗi khi mở lại
+                // a. Xử lý Date + Time từ DateTimePicker
+                // DateTimePicker có thể trả string, chuyển về Date object
+                // User is in GMT+7. Must convert local time → SAP server time.
+                // c. Xử lý IsImmediate: Metadata là String(1), KHÔNG PHẢI Boolean
+                // Quy ước: Chạy ngay = "X", Chạy lịch = ""
+                // 3. TRUYỀN THAM SỐ (Mapping chính xác từng dòng)
+                // Xử lý FrequencyType + FrequencyValue (BẮT BUỘC trong Z_A_JOB_REQ)
+                // 5. THỰC THI VÀ CHỜ KẾT QUẢ (Promise)
+                    // --- THÀNH CÔNG (Backend trả về HTTP 2xx) ---
+                    // Lưu ý: Nếu muốn lấy message thành công từ Backend gửi lên header sap-messages,
+                    // OData V4 model thường tự động xử lý và hiện MessageToast nếu configured.
+                    // Tuy nhiên ta cứ hiện thủ công cho chắc chắn.
+                    // Reset wizard và quay lại
+                    // --- THẤT BẠI (Backend trả về HTTP 4xx/5xx hoặc có lỗi trong failed table) ---
+                    // Trích xuất thông báo lỗi từ OData V4 response
+
+--- Main.controller.js ---                // Lưu Action Name hiện tại để sử dụng trong onConfirmRelease
+                // Lưu Selected Contexts
+                // --- 1. LẤY GIÁ TRỊ THÔ TỪ UI ---
+                // --- 2. ĐỊNH DẠNG CHO CHUẨN ODATA V4 VÀ ĐỔI MÚI GIỜ (GIỐNG CREATE JOB) ---
+                    oDate = new Date(); // Lấy giờ hiện tại 
+                    // Chuyển chuỗi từ UI (local time ghép từ YYYY-MM-DD và HH:mm:ss) sang Date object
+                    // Convert local time → SAP server time (Europe/Berlin)
+                // --- 4. VALIDATE: Nếu không phải Immediate thì phải có Date và Time ---
+                // --- DÙNG EXTENSION API VỚI ACTION ĐỘNG TỪ this._sCurrentAction ---
+                    // Bỏ qua lỗi đồng bộ trạng thái action (metadata/cache) để tránh popup lỗi xám.
+            // ==================== HELPER: Gọi Bound Action cho nhiều dòng (DỄ HIỂU) ====================
+                // --- 0. Dọn dẹp các thông báo lỗi cũ trên giao diện (để không bị hiện thanh thông báo đỏ/vàng) ---
+                // Chạy từng Job một (Tuần tự) để tránh lỗi Batch SAP
+                        await oActionContext.execute(); // Chờ thằng này chạy xong mới qua thằng kế
+                // Hiển thị kết quả sau khi chạy xong hết
+                    var sErrors = aFailed.map(function (r) { return "• " + r.name + ": " + r.error; }).join("\n");
+                    MessageBox.error(sLabel + " thất bại cho " + aFailed.length + " job:\n\n" + sErrors);
+                // Tên Action đầy đủ (Namespace.Action)
+                // Gọi CopyJob Action - SAP sẽ tự động bật Popup dựa trên Abstract Entity
+                // để nhập tham số NewJobName
+                    contexts: [aSelectedContexts[0]] // Truyền Context của dòng được chọn
+                    // Thành công
+                    // Job mới có thể có StartDate rỗng nên cần bỏ lọc StartDate để không bị ẩn.
+                    // Nếu user cancel hoặc lỗi
+            // ==================== STOP JOB (với Confirmation) ====================
+            // ==================== DELETE JOB (với Confirmation) ====================
+                // 1. Lấy user đang đăng nhập (Trong Fiori Launchpad hoặc Sandbox)
+                    // Nếu chạy chay (index.html) không có FLP, đành chịu không biết ai đăng nhập
+                    return; // Nếu không biết user là ai thì không filter được
+                // 2. Tìm binding của bảng
+                // 3. Toggle filter: press 1 → filter, press 2 → clear
+            // --- THÊM HÀM NÀY ĐỂ ĐIỀU HƯỚNG SANG TRANG DETAIL (GIỐNG SM37) ---
+                    // 1. Lấy đường dẫn Context (Path)
+                    // Ví dụ sPath: "/JobList(JobName='BJSM_TEST',JobCount='000001')"
+                    // 2. Tách lấy phần Key nằm trong ngoặc đơn
+                    // 3. Điều hướng sang Object Page đã khai báo trong manifest.json
+                    // Tên route "JobListObjectPage" và biến "JobListKey" phải khớp với manifest
+
+--- Main.view.xml ---    <!-- Thêm Menu ẩn (ActionSheet) ở đây, sẽ được gọi lên khi bấm nút Manage -->

@@ -60,9 +60,9 @@ sap.ui.define(
                     return;
                 }
 
-                // Lưu Action Name hiện tại để sử dụng trong onConfirmRelease
+                // Save current Action Name to use in onConfirmRelease
                 this._sCurrentAction = sActionName;
-                // Lưu Selected Contexts
+                // Save Selected Contexts
                 this._selectedContexts = aSelectedContexts;
 
                 if (this._pReleaseDialog) {
@@ -103,25 +103,25 @@ sap.ui.define(
                     return;
                 }
 
-                // --- 1. LẤY GIÁ TRỊ THÔ TỪ UI ---
+                // --- 1. GET RAW VALUES FROM UI ---
                 var sRawDate = this.byId("idReleaseDate") ? this.byId("idReleaseDate").getValue() : "";     // "2026-03-18"
                 var sRawTime = this.byId("idReleaseTime") ? this.byId("idReleaseTime").getValue() : "";     // "05:00:00"
                 var bIsImmediate = this.byId("idImmedCheck") ? this.byId("idImmedCheck").getSelected() : false;
 
-                // --- 2. ĐỊNH DẠNG CHO CHUẨN ODATA V4 VÀ ĐỔI MÚI GIỜ (GIỐNG CREATE JOB) ---
+                // --- 2. FORMAT FOR ODATA V4 AND CONVERT TIMEZONE (LIKE CREATE JOB) ---
                 var sSapDate = "";
                 var sSapTime = "";
                 var oDate = null;
 
                 if (bIsImmediate) {
-                    oDate = new Date(); // Lấy giờ hiện tại 
+                    oDate = new Date(); // Get current time 
                 } else if (sRawDate && sRawTime) {
-                    // Chuyển chuỗi từ UI (local time ghép từ YYYY-MM-DD và HH:mm:ss) sang Date object
+                    // Convert UI string (local time from YYYY-MM-DD and HH:mm:ss) to Date object
                     oDate = new Date(sRawDate + "T" + sRawTime);
                 }
 
                 if (oDate && !isNaN(oDate.getTime())) {
-                    // Convert local time → SAP server time (Europe/Berlin)
+                    // Convert local time -> SAP server time (Europe/Berlin)
                     var oFormatter = new Intl.DateTimeFormat('en-CA', {
                         timeZone: 'Europe/Berlin',
                         year: 'numeric', month: '2-digit', day: '2-digit',
@@ -136,7 +136,7 @@ sap.ui.define(
                     sSapTime = oParts.hour + ":" + oParts.minute + ":" + oParts.second;
                 }
 
-                // --- 4. VALIDATE: Nếu không phải Immediate thì phải có Date và Time ---
+                // --- 4. VALIDATE: If not Immediate, Date and Time are required ---
                 if (!bIsImmediate && (!sSapDate || !sSapTime)) {
                     MessageToast.show(this._getText("msgEnterDateTime"));
                     this._bConfirmInFlight = false;
@@ -164,7 +164,7 @@ sap.ui.define(
 
                 sap.ui.core.BusyIndicator.show(0);
 
-                // --- DÙNG EXTENSION API VỚI ACTION ĐỘNG TỪ this._sCurrentAction ---
+                // --- USE EXTENSION API WITH DYNAMIC ACTION FROM this._sCurrentAction ---
                 var oExtensionAPI = this.getExtensionAPI();
                 var sCurrentAction = this._sCurrentAction || "com.sap.gateway.srvd.z_sd_job_ovp.v0001.ReleaseJob";
 
@@ -203,7 +203,7 @@ sap.ui.define(
                     that._bConfirmInFlight = false;
                     var sErrMsg = oError && oError.message ? oError.message : this._getText("msgPleaseTryAgain");
 
-                    // Bỏ qua lỗi đồng bộ trạng thái action (metadata/cache) để tránh popup lỗi xám.
+                    // Ignore action state sync errors (metadata/cache) to prevent gray error popups.
                     if (sErrMsg.toLowerCase().includes("enabled")) {
                         console.log("System state was refreshed.");
                         return;
@@ -226,21 +226,21 @@ sap.ui.define(
                 }.bind(this));
             },
 
-            // ==================== HELPER: Gọi Bound Action cho nhiều dòng (DỄ HIỂU) ====================
+            // ==================== HELPER: Call Bound Action for multiple rows ====================
             _executeAction: async function (aContexts, sActionName, sLabel, oOptions) {
                 var aSuccess = [];
                 var aFailed = [];
 
-                // --- 0. Dọn dẹp các thông báo lỗi cũ trên giao diện (để không bị hiện thanh thông báo đỏ/vàng) ---
+                // --- 0. Clear old error messages ---
                 var oMessageManager = sap.ui.getCore().getMessageManager();
                 oMessageManager.removeAllMessages();
 
-                // Chạy từng Job một (Tuần tự) để tránh lỗi Batch SAP
+                // Run jobs sequentially to avoid SAP Batch errors
                 for (var oContext of aContexts) {
                     var sJobName = oContext.getProperty("JobName") || "(unknown)";
                     try {
                         var oActionContext = oContext.getModel().bindContext(sActionName + "(...)", oContext);
-                        await oActionContext.execute(); // Chờ thằng này chạy xong mới qua thằng kế
+                        await oActionContext.execute(); // Wait for completion before next iteration
                         aSuccess.push(sJobName);
                     } catch (oError) {
                         var sErr = oError?.error?.message || oError?.message || this._getText("msgUnknownError");
@@ -248,13 +248,13 @@ sap.ui.define(
                     }
                 }
 
-                // Hiển thị kết quả sau khi chạy xong hết
+                // Display result after all executions
                 if (aSuccess.length > 0) {
                     MessageToast.show(sLabel + " xong cho: " + aSuccess.join(", "));
                 }
                 if (aFailed.length > 0) {
                     var sErrors = aFailed.map(function (r) { return "• " + r.name + ": " + r.error; }).join("\n");
-                    MessageBox.error(sLabel + " thất bại cho " + aFailed.length + " job:\n\n" + sErrors);
+                    MessageBox.error(this._getText("msgActionFailed", [sLabel, aFailed.length, sErrors]));
                 }
 
                 this._refreshTable();
@@ -288,22 +288,22 @@ sap.ui.define(
                 var that = this;
                 var oExtensionAPI = this.getExtensionAPI();
 
-                // Tên Action đầy đủ (Namespace.Action)
+                // Full Action name (Namespace.Action)
                 var sActionName = "com.sap.gateway.srvd.z_sd_job_ovp.v0001.CopyJob";
 
-                // Gọi CopyJob Action - SAP sẽ tự động bật Popup dựa trên Abstract Entity
-                // để nhập tham số NewJobName
+                // Call CopyJob Action - SAP automatically shows Popup based on Abstract Entity
+                // to input NewJobName parameter
                 oExtensionAPI.editFlow.invokeAction(sActionName, {
-                    contexts: [aSelectedContexts[0]] // Truyền Context của dòng được chọn
+                    contexts: [aSelectedContexts[0]] // Pass Context of selected row
                 }).then(function () {
-                    // Thành công
+                    // Success
                     MessageToast.show(this._getText("msgCopyRenameCompleted"));
 
-                    // Job mới có thể có StartDate rỗng nên cần bỏ lọc StartDate để không bị ẩn.
+                    // New Job might have empty StartDate, clear StartDate filter to prevent hiding.
                     that._clearStartDateFilter();
                     that._refreshTable();
                 }).catch(function (err) {
-                    // Nếu user cancel hoặc lỗi
+                    // If user cancels or error
                     console.error("Copy Job error:", err);
                     if (err && err.message && err.message.indexOf("cancelled") === -1) {
                         MessageBox.error(this._getText("msgCopyJobFailed", [err.message || this._getText("msgPleaseTryAgain")]));
@@ -371,7 +371,7 @@ sap.ui.define(
                 }
             },
 
-            // ==================== STOP JOB (với Confirmation) ====================
+            // ==================== STOP JOB (with Confirmation) ====================
             onStopJob: function () {
                 var oTable = this.byId("Table");
                 var aSelectedContexts = oTable.getSelectedContexts();
@@ -396,7 +396,7 @@ sap.ui.define(
                 });
             },
 
-            // ==================== DELETE JOB (với Confirmation) ====================
+            // ==================== DELETE JOB (with Confirmation) ====================
             onDeleteJob: function () {
                 var oTable = this.byId("Table");
                 var aSelectedContexts = oTable.getSelectedContexts();
@@ -435,20 +435,20 @@ sap.ui.define(
             onFilterOwnJobs: function () {
                 var sCurrentUser = "";
 
-                // 1. Lấy user đang đăng nhập (Trong Fiori Launchpad hoặc Sandbox)
+                // 1. Get current logged-in user (in Fiori Launchpad or Sandbox)
                 if (sap.ushell && sap.ushell.Container) {
                     sCurrentUser = sap.ushell.Container.getService("UserInfo").getId();
                 } else {
-                    // Nếu chạy chay (index.html) không có FLP, đành chịu không biết ai đăng nhập
+                    // If running standalone (index.html) without FLP, user is unknown
                     sCurrentUser = "";
                     MessageToast.show(this._getText("msgWarningNoFLP"));
                 }
 
                 if (!sCurrentUser) {
-                    return; // Nếu không biết user là ai thì không filter được
+                    return; // Cannot filter if user is unknown
                 }
 
-                // 2. Tìm binding của bảng
+                // 2. Find table binding
                 var oMacroTable = this.byId("Table");
                 if (!oMacroTable) { return; }
 
@@ -461,7 +461,7 @@ sap.ui.define(
                     oBinding = oInnerTable.getRowBinding();
                 }
 
-                // 3. Toggle filter: press 1 → filter, press 2 → clear
+                // 3. Toggle filter: press 1 -> filter, press 2 -> clear
                 if (oBinding) {
                     if (this._bFilteringOwnJobs) {
                         oBinding.filter([], "Application");
@@ -475,7 +475,7 @@ sap.ui.define(
                     }
                 }
             },
-            // --- THÊM HÀM NÀY ĐỂ ĐIỀU HƯỚNG SANG TRANG DETAIL (GIỐNG SM37) ---
+            // --- ADD THIS TO NAVIGATE TO DETAIL PAGE (LIKE SM37) ---
             onRowPress: function (oEvent) {
                 var oContext = oEvent.getParameters().bindingContext || oEvent.getSource().getBindingContext();
                 if (!oContext) {
@@ -485,15 +485,15 @@ sap.ui.define(
                 var oExtensionAPI = this.getExtensionAPI();
                 if (oExtensionAPI && oExtensionAPI.routing) {
 
-                    // 1. Lấy đường dẫn Context (Path)
-                    // Ví dụ sPath: "/JobList(JobName='BJSM_TEST',JobCount='000001')"
+                    // 1. Get Context Path
+                    // Example sPath: "/JobList(JobName='BJSM_TEST',JobCount='000001')"
                     var sPath = oContext.getPath();
 
-                    // 2. Tách lấy phần Key nằm trong ngoặc đơn
+                    // 2. Extract Key from parentheses
                     var sKey = sPath.substring(sPath.indexOf("(") + 1, sPath.indexOf(")"));
 
-                    // 3. Điều hướng sang Object Page đã khai báo trong manifest.json
-                    // Tên route "JobListObjectPage" và biến "JobListKey" phải khớp với manifest
+                    // 3. Navigate to Object Page declared in manifest.json
+                    // Route name "JobListObjectPage" and variable "JobListKey" must match manifest
                     oExtensionAPI.routing.navigateToRoute("JobListObjectPage", {
                         "JobListKey": sKey
                     });
