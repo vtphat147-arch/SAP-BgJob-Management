@@ -60,10 +60,11 @@ sap.ui.define(
                 if (this._pReleaseDialog) {
                     this._pReleaseDialog.then(function (oDialog) {
                         oDialog.setTitle(sTitle);
+                        this._resetReleaseDialog();
                         if (!oDialog.isOpen()) {
                             oDialog.open();
                         }
-                    });
+                    }.bind(this));
                     return;
                 }
 
@@ -74,9 +75,39 @@ sap.ui.define(
                 }).then(function (oDialog) {
                     this.getView().addDependent(oDialog);
                     oDialog.setTitle(sTitle);
+                    this._resetReleaseDialog();
                     oDialog.open();
                     return oDialog;
                 }.bind(this));
+            },
+
+            _resetReleaseDialog: function () {
+                var oModel = this.getView().getModel("localRelease");
+                if (!oModel) {
+                    oModel = new sap.ui.model.json.JSONModel({
+                        isImmediate: false
+                    });
+                    this.getView().setModel(oModel, "localRelease");
+                } else {
+                    oModel.setProperty("/isImmediate", false);
+                }
+
+                var oDate = this.byId("idReleaseDate");
+                if (oDate) { oDate.setValue(""); oDate.setValueState("None"); }
+
+                var oTime = this.byId("idReleaseTime");
+                if (oTime) { oTime.setValue(""); oTime.setValueState("None"); }
+
+                var oTabBar = this.byId("idStartModeTabs");
+                if (oTabBar) { oTabBar.setSelectedKey("scheduled"); }
+            },
+
+            onImmediateChange: function (oEvent) {
+                var bSelected = oEvent.getParameter("selected");
+                var oModel = this.getView().getModel("localRelease");
+                if (oModel) {
+                    oModel.setProperty("/isImmediate", bSelected);
+                }
             },
 
             onConfirmRelease: function () {
@@ -129,10 +160,23 @@ sap.ui.define(
                 }
 
                 // --- 4. VALIDATE: Nếu không phải Immediate thì phải có Date và Time ---
-                if (!bIsImmediate && (!sSapDate || !sSapTime)) {
-                    MessageToast.show("Please enter start date and start time.");
-                    this._bConfirmInFlight = false;
-                    return;
+                if (!bIsImmediate) {
+                    if (!sSapDate || !sSapTime) {
+                        MessageToast.show("Please enter start date and start time.");
+                        this._bConfirmInFlight = false;
+                        return;
+                    }
+
+                    // Validate that the scheduled date/time is not in the past (allow 1 minute tolerance)
+                    if (oDate) {
+                        var oNow = new Date();
+                        oNow.setMinutes(oNow.getMinutes() - 1);
+                        if (oDate < oNow) {
+                            MessageBox.error("The scheduled start date and time cannot be in the past.");
+                            this._bConfirmInFlight = false;
+                            return;
+                        }
+                    }
                 }
 
                 var aParameterValues = [
@@ -300,14 +344,28 @@ sap.ui.define(
                     return;
                 }
 
-                if (aSelectedContexts.length > 1) {
-                    MessageToast.show("Only the first selected job will be copied.");
-                }
-
                 var oSelectedContext = aSelectedContexts[0];
                 var sOldJobName = oSelectedContext.getProperty("JobName") || "";
-
                 this._oCopySourceContext = oSelectedContext;
+
+                var that = this;
+
+                if (aSelectedContexts.length > 1) {
+                    MessageBox.warning(
+                        "You have selected multiple jobs. Only the first selected job (" + sOldJobName + ") will be copied.\n\nDo you want to continue?", 
+                        {
+                            title: "Multiple Jobs Selected",
+                            actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
+                            onClose: function (sAction) {
+                                if (sAction === MessageBox.Action.OK) {
+                                    that._openCopyDialog(sOldJobName);
+                                }
+                            }
+                        }
+                    );
+                    return;
+                }
+
                 this._openCopyDialog(sOldJobName);
             },
 
