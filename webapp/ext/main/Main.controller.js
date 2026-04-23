@@ -3,16 +3,26 @@ sap.ui.define(
         'sap/fe/core/PageController',
         "sap/m/MessageToast",
         "sap/m/MessageBox",
-        "sap/ui/model/Filter",
-        "sap/ui/model/FilterOperator",
         "sap/ui/core/Fragment",
         "sap/ui/core/BusyIndicator",
         "sap/ui/model/json/JSONModel"
     ],
-    function (PageController, MessageToast, MessageBox, Filter, FilterOperator, Fragment, BusyIndicator, JSONModel) {
+    function (PageController, MessageToast, MessageBox, Fragment, BusyIndicator, JSONModel) {
         'use strict';
 
         return PageController.extend('project5.ext.main.Main', {
+
+            _getI18nBundle: function () {
+                var oI18nModel = this.getView() && this.getView().getModel("i18n");
+                return oI18nModel && typeof oI18nModel.getResourceBundle === "function"
+                    ? oI18nModel.getResourceBundle()
+                    : null;
+            },
+
+            _t: function (sKey, aArgs) {
+                var oBundle = this._getI18nBundle();
+                return oBundle ? oBundle.getText(sKey, aArgs || []) : sKey;
+            },
 
             // ==================== REFRESH ====================
             onRefreshTable: function () {
@@ -32,13 +42,13 @@ sap.ui.define(
                 var aSelectedContexts = oTable.getSelectedContexts();
 
                 if (aSelectedContexts.length === 0) {
-                    MessageToast.show("Please select a job.");
+                    MessageToast.show(this._t("msgSelectJob"));
                     return;
                 }
 
                 this._openActionDialog(
                     "com.sap.gateway.srvd.z_sd_job_ovp.v0001.ReleaseJob",
-                    "Define Start Condition"
+                    this._t("dialogReleaseTitle")
                 );
             },
 
@@ -48,7 +58,7 @@ sap.ui.define(
                 var aSelectedContexts = oTable.getSelectedContexts();
 
                 if (aSelectedContexts.length === 0) {
-                    MessageToast.show("Please select a job.");
+                    MessageToast.show(this._t("msgSelectJob"));
                     return;
                 }
 
@@ -121,7 +131,7 @@ sap.ui.define(
                 var aSelectedContexts = this._selectedContexts || [];
 
                 if (!aSelectedContexts.length) {
-                    MessageToast.show("Please select a job.");
+                    MessageToast.show(this._t("msgSelectJob"));
                     this._bConfirmInFlight = false;
                     return;
                 }
@@ -162,7 +172,7 @@ sap.ui.define(
                 // --- 4. VALIDATE: Nếu không phải Immediate thì phải có Date và Time ---
                 if (!bIsImmediate) {
                     if (!sSapDate || !sSapTime) {
-                        MessageToast.show("Please enter start date and start time.");
+                        MessageToast.show(this._t("msgEnterStartDateTime"));
                         this._bConfirmInFlight = false;
                         return;
                     }
@@ -172,7 +182,7 @@ sap.ui.define(
                         var oNow = new Date();
                         oNow.setMinutes(oNow.getMinutes() - 1);
                         if (oDate < oNow) {
-                            MessageBox.error("The scheduled start date and time cannot be in the past.");
+                            MessageBox.error(this._t("msgPastStartDateTime"));
                             this._bConfirmInFlight = false;
                             return;
                         }
@@ -236,8 +246,10 @@ sap.ui.define(
                     if (aSuccessMsgs.length > 0) {
                         MessageToast.show(aSuccessMsgs.map(function (m) { return m.message; }).join("\n"));
                     } else {
-                        var sActionLabel = (sCurrentAction.indexOf("Repeat") !== -1) ? "Repeat Job" : "Release Job";
-                        MessageToast.show(sActionLabel + " completed successfully.");
+                        var sActionLabel = (sCurrentAction.indexOf("Repeat") !== -1)
+                            ? that._t("labelRepeatJob")
+                            : that._t("labelReleaseJob");
+                        MessageToast.show(that._t("msgActionCompleted", [sActionLabel]));
                     }
                     that._bConfirmInFlight = false;
                     that.onCloseReleaseDialog();
@@ -245,7 +257,7 @@ sap.ui.define(
                 }).catch(function (oError) {
                     BusyIndicator.hide();
                     that._bConfirmInFlight = false;
-                    var sErrMsg = oError && oError.message ? oError.message : "Please try again.";
+                    var sErrMsg = oError && oError.message ? oError.message : that._t("msgTryAgain");
 
                     // Bỏ qua lỗi đồng bộ trạng thái action (metadata/cache) để tránh popup lỗi xám.
                     if (sErrMsg.toLowerCase().includes("enabled")) {
@@ -254,7 +266,7 @@ sap.ui.define(
                     }
 
                     console.error("Action error details:", oError);
-                    MessageBox.error("Execution failed: " + sErrMsg);
+                    MessageBox.error(that._t("msgExecutionFailed", [sErrMsg]));
                 });
             },
 
@@ -281,13 +293,13 @@ sap.ui.define(
 
                 // Execute sequentially to avoid SAP batch errors
                 for (var oContext of aContexts) {
-                    var sJobName = oContext.getProperty("JobName") || "(unknown)";
+                    var sJobName = oContext.getProperty("JobName") || this._t("labelUnknownJob");
                     try {
                         var oActionContext = oContext.getModel().bindContext(sActionName + "(...)", oContext);
                         await oActionContext.execute();
                         aSuccess.push(sJobName);
                     } catch (oError) {
-                        var sErr = oError?.error?.message || oError?.message || "Unknown error";
+                        var sErr = oError?.error?.message || oError?.message || this._t("labelUnknownError");
                         aFailed.push({ name: sJobName, error: sErr });
                     }
                 }
@@ -303,7 +315,7 @@ sap.ui.define(
                     MessageToast.show(sSuccessText);
                 } else if (aSuccess.length > 0) {
                     // Fallback if BE didn't return specific messages
-                    MessageToast.show(sLabel + " completed for: " + aSuccess.join(", "));
+                    MessageToast.show(this._t("msgExecuteCompletedFor", [sLabel, aSuccess.join(", ")]));
                 }
 
                 // Show BE error messages
@@ -313,7 +325,7 @@ sap.ui.define(
                 } else if (aFailed.length > 0) {
                     // Fallback
                     var sErrors = aFailed.map(function (r) { return "• " + r.name + ": " + r.error; }).join("\n");
-                    MessageBox.error(sLabel + " failed for " + aFailed.length + " job(s):\n\n" + sErrors);
+                    MessageBox.error(this._t("msgExecuteFailedFor", [sLabel, aFailed.length, sErrors]));
                 }
 
                 this._refreshTable();
@@ -325,13 +337,13 @@ sap.ui.define(
                 var aSelectedContexts = oTable.getSelectedContexts();
 
                 if (aSelectedContexts.length === 0) {
-                    MessageToast.show("Please select at least one job to repeat.");
+                    MessageToast.show(this._t("msgSelectAtLeastRepeat"));
                     return;
                 }
 
                 this._openActionDialog(
                     "com.sap.gateway.srvd.z_sd_job_ovp.v0001.RepeatWithSchedule",
-                    "Define Start Condition for Repeat Job"
+                    this._t("dialogRepeatTitle")
                 );
             },
 
@@ -340,7 +352,7 @@ sap.ui.define(
                 var aSelectedContexts = this.byId("Table").getSelectedContexts();
 
                 if (aSelectedContexts.length === 0) {
-                    MessageToast.show("Please select at least one job to copy.");
+                    MessageToast.show(this._t("msgSelectAtLeastCopy"));
                     return;
                 }
 
@@ -352,9 +364,9 @@ sap.ui.define(
 
                 if (aSelectedContexts.length > 1) {
                     MessageBox.warning(
-                        "You have selected multiple jobs. Only the first selected job (" + sOldJobName + ") will be copied.\n\nDo you want to continue?", 
+                        this._t("msgMultipleJobsSelected", [sOldJobName]),
                         {
-                            title: "Multiple Jobs Selected",
+                            title: this._t("titleMultipleJobsSelected"),
                             actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
                             onClose: function (sAction) {
                                 if (sAction === MessageBox.Action.OK) {
@@ -414,7 +426,7 @@ sap.ui.define(
 
                 if (oInput) {
                     oInput.setValueState(bValid ? "None" : "Error");
-                    oInput.setValueStateText("Job name is required.");
+                    oInput.setValueStateText(this._t("msgJobNameRequired"));
                 }
 
                 if (oDialog && oDialog.getBeginButton()) {
@@ -437,7 +449,7 @@ sap.ui.define(
                 }
 
                 if (!oContext) {
-                    MessageBox.error("Cannot find the selected job context.");
+                    MessageBox.error(this._t("msgCopyContextNotFound"));
                     return;
                 }
 
@@ -461,7 +473,7 @@ sap.ui.define(
                     if (aMsgs.length > 0) {
                         MessageToast.show(aMsgs.map(function (m) { return m.message; }).join("\n"));
                     } else {
-                        MessageToast.show("Copy and Rename completed successfully.");
+                        MessageToast.show(that._t("msgCopyRenameSuccess"));
                     }
                     that.onCloseCopyDialog();
                     that._clearStartDateFilter();
@@ -470,7 +482,7 @@ sap.ui.define(
                     BusyIndicator.hide();
                     console.error("Copy Job error:", err);
                     if (!err || !err.message || err.message.indexOf("cancelled") === -1) {
-                        MessageBox.error("Copy Job failed: " + (err.message || "Please try again."));
+                        MessageBox.error(that._t("msgCopyFailed", [err.message || that._t("msgTryAgain")]));
                     }
                 });
             },
@@ -553,20 +565,20 @@ sap.ui.define(
                 var aSelectedContexts = oTable.getSelectedContexts();
 
                 if (aSelectedContexts.length === 0) {
-                    MessageToast.show("Please select at least one job to stop.");
+                    MessageToast.show(this._t("msgSelectAtLeastStop"));
                     return;
                 }
 
                 var iCount = aSelectedContexts.length;
-                var sMessage = "Do you want to stop " + iCount + " selected job(s)?";
+                var sMessage = this._t("msgConfirmStopJobs", [iCount]);
 
                 var that = this;
                 MessageBox.confirm(sMessage, {
-                    title: "Confirm Stop Job",
+                    title: this._t("titleConfirmStop"),
                     emphasizedAction: MessageBox.Action.OK,
                     onClose: function (sAction) {
                         if (sAction === MessageBox.Action.OK) {
-                            that._executeAction(aSelectedContexts, "com.sap.gateway.srvd.z_sd_job_ovp.v0001.StopJob", "Stop");
+                            that._executeAction(aSelectedContexts, "com.sap.gateway.srvd.z_sd_job_ovp.v0001.StopJob", that._t("labelStop"));
                         }
                     }
                 });
@@ -577,20 +589,20 @@ sap.ui.define(
                 var oTable = this.byId("Table");
                 var aSelectedContexts = oTable.getSelectedContexts();
                 if (aSelectedContexts.length === 0) {
-                    MessageToast.show("Please select at least one job to delete.");
+                    MessageToast.show(this._t("msgSelectAtLeastDelete"));
                     return;
                 }
 
                 var iCount = aSelectedContexts.length;
-                var sMessage = "Do you want to delete " + iCount + " selected job(s)?";
+                var sMessage = this._t("msgConfirmDeleteJobs", [iCount]);
 
                 var that = this;
                 MessageBox.confirm(sMessage, {
-                    title: "Confirm Delete Job",
+                    title: this._t("titleConfirmDelete"),
                     emphasizedAction: MessageBox.Action.OK,
                     onClose: function (sAction) {
                         if (sAction === MessageBox.Action.OK) {
-                            that._executeAction(aSelectedContexts, "com.sap.gateway.srvd.z_sd_job_ovp.v0001.DeleteJob", "Delete");
+                            that._executeAction(aSelectedContexts, "com.sap.gateway.srvd.z_sd_job_ovp.v0001.DeleteJob", that._t("labelDelete"));
                         }
                     }
                 });
@@ -617,39 +629,137 @@ sap.ui.define(
                 } else {
                     // Nếu chạy chay (index.html) không có FLP, đành chịu không biết ai đăng nhập
                     sCurrentUser = "";
-                    MessageToast.show("Warning: Not running in Fiori Launchpad. Cannot detect current user.");
+                    MessageToast.show(this._t("msgNotInLaunchpad"));
                 }
 
                 if (!sCurrentUser) {
                     return; // Nếu không biết user là ai thì không filter được
                 }
 
-                // 2. Tìm binding của bảng
-                var oMacroTable = this.byId("Table");
-                if (!oMacroTable) { return; }
-
-                var oInnerTable = oMacroTable.getContent();
-                var oBinding = null;
-                if (oInnerTable) {
-                    oBinding = oInnerTable.getBinding("rows") || oInnerTable.getBinding("items");
+                // 2. Update FilterBar conditions so FE search/go keeps My Jobs condition.
+                var oMacroFilterBar = this.byId("FilterBar");
+                if (!oMacroFilterBar || typeof oMacroFilterBar.getContent !== "function") {
+                    return;
                 }
-                if (!oBinding && oInnerTable && typeof oInnerTable.getRowBinding === "function") {
-                    oBinding = oInnerTable.getRowBinding();
+                var oFilterBar = oMacroFilterBar.getContent();
+                if (!oFilterBar) {
+                    return;
                 }
 
-                // 3. Toggle filter: press 1 → filter, press 2 → clear
-                if (oBinding) {
-                    if (this._bFilteringOwnJobs) {
-                        oBinding.filter([], "Application");
-                        this._bFilteringOwnJobs = false;
-                        MessageToast.show("Showing all jobs.");
+                this._bFilteringOwnJobs = !this._bFilteringOwnJobs;
+
+                var bUpdated = this._setCreatedByCondition(oFilterBar, this._bFilteringOwnJobs, sCurrentUser);
+                if (!bUpdated) {
+                    this._bFilteringOwnJobs = !this._bFilteringOwnJobs;
+                    return;
+                }
+
+                // 3. Trigger search after condition update.
+                if (typeof oFilterBar.triggerSearch === "function") {
+                    oFilterBar.triggerSearch();
+                } else if (typeof oFilterBar.fireSearch === "function") {
+                    oFilterBar.fireSearch();
+                }
+
+                if (!this._bFilteringOwnJobs) {
+                    MessageToast.show(this._t("msgShowingAllJobs"));
+                } else {
+                    MessageToast.show(this._t("msgFilteringJobsBy", [sCurrentUser]));
+                }
+            },
+
+            _setCreatedByCondition: function (oFilterBar, bEnable, sCurrentUser) {
+                var bUpdated = false;
+
+                if (typeof oFilterBar.getFilterConditions === "function" && typeof oFilterBar.setFilterConditions === "function") {
+                    var mConditions = oFilterBar.getFilterConditions() || {};
+                    var mUpdatedConditions = Object.assign({}, mConditions);
+
+                    if (bEnable) {
+                        mUpdatedConditions.CreatedBy = [{
+                            operator: "EQ",
+                            values: [sCurrentUser],
+                            validated: "Validated"
+                        }];
                     } else {
-                        var oFilter = new Filter("CreatedBy", FilterOperator.EQ, sCurrentUser);
-                        oBinding.filter(oFilter, "Application");
-                        this._bFilteringOwnJobs = true;
-                        MessageToast.show("Filtering jobs by: " + sCurrentUser);
+                        delete mUpdatedConditions.CreatedBy;
+                    }
+
+                    oFilterBar.setFilterConditions(mUpdatedConditions);
+                    bUpdated = true;
+                }
+
+                if (!bUpdated && typeof oFilterBar.getConditionModel === "function") {
+                    var oConditionModel = oFilterBar.getConditionModel();
+                    if (
+                        oConditionModel &&
+                        typeof oConditionModel.removeAllConditions === "function" &&
+                        typeof oConditionModel.addCondition === "function"
+                    ) {
+                        oConditionModel.removeAllConditions("CreatedBy");
+                        if (bEnable) {
+                            oConditionModel.addCondition("CreatedBy", {
+                                operator: "EQ",
+                                values: [sCurrentUser],
+                                validated: "Validated"
+                            });
+                        }
+                        bUpdated = true;
                     }
                 }
+
+                return bUpdated;
+            },
+
+            _hasCreatedByCondition: function (oFilterBar) {
+                if (typeof oFilterBar.getFilterConditions === "function") {
+                    var mConditions = oFilterBar.getFilterConditions() || {};
+                    return !!(mConditions.CreatedBy && mConditions.CreatedBy.length);
+                }
+
+                if (typeof oFilterBar.getConditionModel === "function") {
+                    var oConditionModel = oFilterBar.getConditionModel();
+                    if (oConditionModel && typeof oConditionModel.getConditions === "function") {
+                        var aCreatedBy = oConditionModel.getConditions("CreatedBy") || [];
+                        return aCreatedBy.length > 0;
+                    }
+                }
+
+                return false;
+            },
+
+            _syncMyJobsCondition: function () {
+                if (!this._bFilteringOwnJobs || this._bSyncingMyJobs) {
+                    return;
+                }
+
+                var sCurrentUser = "";
+                if (sap.ushell && sap.ushell.Container) {
+                    sCurrentUser = sap.ushell.Container.getService("UserInfo").getId();
+                }
+                if (!sCurrentUser) {
+                    return;
+                }
+
+                var oMacroFilterBar = this.byId("FilterBar");
+                if (!oMacroFilterBar || typeof oMacroFilterBar.getContent !== "function") {
+                    return;
+                }
+                var oFilterBar = oMacroFilterBar.getContent();
+                if (!oFilterBar || this._hasCreatedByCondition(oFilterBar)) {
+                    return;
+                }
+
+                this._bSyncingMyJobs = true;
+                var bUpdated = this._setCreatedByCondition(oFilterBar, true, sCurrentUser);
+                if (bUpdated) {
+                    if (typeof oFilterBar.triggerSearch === "function") {
+                        oFilterBar.triggerSearch();
+                    } else if (typeof oFilterBar.fireSearch === "function") {
+                        oFilterBar.fireSearch();
+                    }
+                }
+                this._bSyncingMyJobs = false;
             },
             // --- THÊM HÀM NÀY ĐỂ ĐIỀU HƯỚNG SANG TRANG DETAIL (GIỐNG SM37) ---
             onRowPress: function (oEvent) {
@@ -695,6 +805,21 @@ sap.ui.define(
                         if (typeof oContent.setSelectionMode === 'function') {
                             oContent.setSelectionMode("Multi");
                         }
+
+                        // Keep My Jobs condition when user filters from table toolbar (sort/group/filter/settings).
+                        if (typeof oContent.attachStateChange === "function" && !this._bMyJobsStateAttached) {
+                            oContent.attachStateChange(this._syncMyJobsCondition, this);
+                            this._bMyJobsStateAttached = true;
+                        }
+                    }
+                }
+
+                var oMacroFilterBar = this.byId("FilterBar");
+                if (oMacroFilterBar && typeof oMacroFilterBar.getContent === "function") {
+                    var oFilterBar = oMacroFilterBar.getContent();
+                    if (oFilterBar && typeof oFilterBar.attachSearch === "function" && !this._bMyJobsSearchAttached) {
+                        oFilterBar.attachSearch(this._syncMyJobsCondition, this);
+                        this._bMyJobsSearchAttached = true;
                     }
                 }
             }

@@ -5,32 +5,32 @@
     xmlns:f="sap.ui.layout.form"
     xmlns:core="sap.ui.core">
     
-    <Page id="wizardPage" title="New Background Job" showNavButton="true" navButtonPress=".onNavBack" class="sapUiResponsiveContentPadding">
+    <Page id="wizardPage" title="{i18n>createJobPageTitle}" showNavButton="true" navButtonPress=".onNavBack" class="sapUiResponsiveContentPadding">
         <content>
-            <Wizard id="CreateJobWizard" complete="onWizardCompleted" finishButtonText="Schedule">
+            <Wizard id="CreateJobWizard" complete="onWizardCompleted" finishButtonText="{i18n>btnSchedule}">
                 
-                <WizardStep id="Step1" title="Template Selection" validated="false" activate="onStep1Activate">
+                <WizardStep id="Step1" title="{i18n>createJobStepTemplateSelection}" validated="false" activate="onStep1Activate">
                     <f:SimpleForm editable="true" layout="ResponsiveGridLayout">
                         <f:content>
-                            <Label text="Job Name" required="true"/>
+                            <Label text="{i18n>createJobJobName}" required="true"/>
                             <Input id="inpJobName" 
                                 value="{local>/jobName}" 
                                 liveChange=".onCheckStep1" 
-                                placeholder="Enter job name..."
+                                placeholder="{i18n>createJobEnterJobNamePlaceholder}"
                                 valueState="{= ${local>/showStep1Errors} &amp;&amp; ${local>/jobName}.length === 0 ? 'Error' : 'None' }"
-                                valueStateText="Please enter a Job Name."/>
+                                valueStateText="{i18n>createJobPleaseEnterJobName}"/>
                             
-                           <Label text="Program Name" required="true"/>
+                           <Label text="{i18n>createJobProgramName}" required="true"/>
                             <Input id="inpProgram"
                                 value="{local>/programName}" 
-                                placeholder="Enter program name..." 
+                                placeholder="{i18n>createJobEnterProgramNamePlaceholder}" 
                                 showValueHelp="true" 
                                 valueHelpRequest=".onProgramValueHelp"
                                 change=".onProgramChange" 
                                 showSuggestion="true"
                                 suggestionItems="{/Z_I_ProgramVH}" 
                                 valueState="{= ${local>/showStep1Errors} &amp;&amp; ${local>/programName}.length === 0 ? 'Error' : 'None' }"
-                                valueStateText="Please enter or select a Program Name.">
+                                valueStateText="{i18n>createJobPleaseEnterOrSelectProgramName}">
 
                                 
                                 
@@ -39,10 +39,10 @@
                                 </suggestionItems>
                             </Input>
                         
-                            <Label text="Variant Name" required="false"/>
+                            <Label text="{i18n>createJobVariantName}" required="false"/>
                             <Input id="inpVariant" 
                                 value="{local>/variantName}" 
-                                placeholder="Select variant"
+                                placeholder="{i18n>createJobSelectVariantPlaceholder}"
                                 showValueHelp="true" 
                                 change=".onCheckStep1"
                                 valueHelpRequest=".onVariantValueHelp"
@@ -51,10 +51,10 @@
                     </f:SimpleForm>
                 </WizardStep>
 
-                <WizardStep id="Step2" title="Scheduling Options" validated="true"> 
+                <WizardStep id="Step2" title="{i18n>createJobSchedulingOptions}" validated="true"> 
                     <Toolbar>
                         <ToolbarSpacer/>
-                        <Button text="Define Recurrence Pattern" press=".onOpenScheduleDialog" type="Ghost"/>
+                        <Button text="{i18n>createJobDefineRecurrencePattern}" press=".onOpenScheduleDialog" type="Ghost"/>
                     </Toolbar>
 
                     <f:SimpleForm editable="true" layout="ResponsiveGridLayout" 
@@ -64,28 +64,28 @@
                             columnsXL="2" columnsL="2" columnsM="2">
                         <f:content>
                             <core:Title text="" /> 
-                            <Label text="Start Immediately"/>
+                            <Label text="{i18n>createJobStartImmediately}"/>
                             <CheckBox selected="{local>/startImmediately}" select="onCheckImmediate"/>
                             
-                            <Label text="Job Start (Local Time)"/>
+                            <Label text="{i18n>createJobStartLocalTime}"/>
                             <Text text="{
                                 path: 'local>/startDate',
                                 type: 'sap.ui.model.type.DateTime',
                                 formatOptions: { style: 'medium' }
                             }" visible="{= ${local>/startImmediately}}"/>
 
-                            <Label text="Start"/>
+                            <Label text="{i18n>createJobStart}"/>
                             <DateTimePicker 
                                 dateValue="{local>/startDate}"
                                 displayFormat="dd.MM.yyyy, HH:mm:ss"
                                 enabled="{= !${local>/startImmediately}}" 
                                 visible="{= !${local>/startImmediately}}"
                                 valueState="{= (!${local>/startImmediately} &amp;&amp; !${local>/startDate}) ? 'Error' : 'None' }"
-                                valueStateText="Please select a start date and time."
+                                valueStateText="{i18n>createJobPleaseSelectStartDateTime}"
                             />
 
                             <core:Title text="" /> 
-                            <Label text="Recurrence Pattern"/>
+                            <Label text="{i18n>createJobRecurrencePattern}"/>
                             <Text text="{local>/recurrence}"/>
                         </f:content>
                     </f:SimpleForm>
@@ -97,7 +97,7 @@
         <footer>
             <OverflowToolbar>
                 <ToolbarSpacer/>
-                <Button text="Cancel" press=".onNavBack"/>
+                <Button text="{i18n>btnCancel}" press=".onNavBack"/>
             </OverflowToolbar>
         </footer>
     </Page>

@@ -1,6 +1,6 @@
 <core:FragmentDefinition xmlns:core="sap.ui.core" xmlns="sap.m" xmlns:f="sap.ui.layout.form">
     <Dialog
-        title="Release Job"
+        title="{i18n>releaseDialogTitle}"
         contentWidth="560px"
         draggable="true"
         resizable="true"
@@ -9,23 +9,23 @@
         class="sapUiResponsivePadding--content sapUiResponsivePadding--header sapUiResponsivePadding--footer">
         <content>
             <VBox class="sapUiSmallMarginBottom sapUiTinyMarginTop">
-                <Title text="Start Configuration" level="H5" class="sapUiTinyMarginBottom"/>
-                <Text text="Choose how this job should start: run immediately or schedule an exact date and time." wrapping="true"/>
+                <Title text="{i18n>releaseStartConfiguration}" level="H5" class="sapUiTinyMarginBottom"/>
+                <Text text="{i18n>releaseStartConfigurationDesc}" wrapping="true"/>
             </VBox>
 
             <IconTabBar id="idStartModeTabs" expandable="false" class="sapUiNoContentPadding sapUiTinyMarginBottom sapUiResponsiveContentPadding">
                 <items>
-                    <IconTabFilter key="immediate" text="Quick Start" icon="sap-icon://play">
+                    <IconTabFilter key="immediate" text="{i18n>releaseQuickStart}" icon="sap-icon://play">
                         <VBox class="sapUiSmallMarginTop sapUiSmallMarginBottom sapUiSmallMarginBegin sapUiSmallMarginEnd">
-                            <Text text="Use this mode to release and start the job instantly after confirmation." wrapping="true" class="sapUiTinyMarginBottom"/>
+                            <Text text="{i18n>releaseQuickStartDesc}" wrapping="true" class="sapUiTinyMarginBottom"/>
                             <CheckBox
                                 id="idImmedCheck"
-                                text="Run immediately"
-                                tooltip="Start the job right away"
+                                text="{i18n>releaseRunImmediately}"
+                                tooltip="{i18n>releaseRunImmediatelyTooltip}"
                                 selected="{localRelease>/isImmediate}"
                                 select="onImmediateChange"/>
                             <MessageStrip
-                                text="The job will be released and started immediately after you confirm."
+                                text="{i18n>releaseImmediateInfo}"
                                 type="Success"
                                 showIcon="true"
                                 showCloseButton="false"
@@ -34,9 +34,9 @@
                         </VBox>
                     </IconTabFilter>
 
-                    <IconTabFilter key="scheduled" text="Scheduled Start" icon="sap-icon://date-time" visible="{= !${localRelease>/isImmediate}}">
+                    <IconTabFilter key="scheduled" text="{i18n>releaseScheduledStart}" icon="sap-icon://date-time" visible="{= !${localRelease>/isImmediate}}">
                         <VBox class="sapUiSmallMarginTop sapUiSmallMarginBottom sapUiSmallMarginBegin sapUiSmallMarginEnd">
-                            <Text text="Disable Run immediately to set a planned start date and time." wrapping="true" class="sapUiTinyMarginBottom"/>
+                            <Text text="{i18n>releaseScheduledStartDesc}" wrapping="true" class="sapUiTinyMarginBottom"/>
 
                             <f:SimpleForm
                                 editable="true"
@@ -55,7 +55,7 @@
                                 columnsL="1"
                                 columnsM="1">
                                 <f:content>
-                                    <Label text="Scheduled Date" labelFor="idReleaseDate"
+                                    <Label text="{i18n>releaseScheduledDate}" labelFor="idReleaseDate"
                                         visible="{= !${localRelease>/isImmediate}}"
                                         required="{= !${localRelease>/isImmediate}}"/>
                                     <DatePicker
@@ -63,10 +63,10 @@
                                         valueFormat="yyyy-MM-dd"
                                         displayFormat="long"
                                         width="100%"
-                                        placeholder="Select scheduled date"
+                                        placeholder="{i18n>releaseScheduledDatePlaceholder}"
                                         visible="{= !${localRelease>/isImmediate}}"/>
 
-                                    <Label text="Scheduled Time" labelFor="idReleaseTime"
+                                    <Label text="{i18n>releaseScheduledTime}" labelFor="idReleaseTime"
                                         visible="{= !${localRelease>/isImmediate}}"
                                         required="{= !${localRelease>/isImmediate}}"/>
                                     <TimePicker
@@ -74,13 +74,13 @@
                                         valueFormat="HH:mm:ss"
                                         displayFormat="medium"
                                         width="100%"
-                                        placeholder="Select scheduled time"
+                                        placeholder="{i18n>releaseScheduledTimePlaceholder}"
                                         visible="{= !${localRelease>/isImmediate}}"/>
                                 </f:content>
                             </f:SimpleForm>
 
                             <MessageStrip
-                                text="The job will start at the scheduled date and time you selected."
+                                text="{i18n>releaseScheduledInfo}"
                                 type="Warning"
                                 showIcon="true"
                                 showCloseButton="false"
@@ -92,10 +92,10 @@
             </IconTabBar>
         </content>
         <beginButton>
-            <Button text="Confirm Release" type="Emphasized" icon="sap-icon://accept" press="onConfirmRelease"/>
+            <Button text="{i18n>btnConfirmRelease}" type="Emphasized" icon="sap-icon://accept" press="onConfirmRelease"/>
         </beginButton>
         <endButton>
-            <Button text="Cancel" type="Transparent" press="onCloseReleaseDialog"/>
+            <Button text="{i18n>btnCancel}" type="Transparent" press="onCloseReleaseDialog"/>
         </endButton>
     </Dialog>
 </core:FragmentDefinition>

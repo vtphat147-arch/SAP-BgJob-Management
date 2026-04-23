@@ -4,7 +4,7 @@
 >
     <Dialog
         id="copyJobDialog"
-        title="Copy Job"
+        title="{i18n>copyDialogTitle}"
         contentWidth="30rem"
         contentHeight="auto"
         draggable="true"
@@ -13,13 +13,13 @@
         <content>
             <VBox class="sapUiSmallMargin">
                 <ObjectStatus
-                    title="Source Job"
+                    title="{i18n>copyDialogSourceJob}"
                     text="{copyJob>/oldJobName}"
                     state="Information"
                     class="sapUiTinyMarginBottom"
                 />
                 <Label
-                    text="New Job Name"
+                    text="{i18n>copyDialogNewJobName}"
                     labelFor="copyJobNameInput"
                     required="true"
                     design="Bold"
@@ -27,7 +27,7 @@
                 <Input
                     id="copyJobNameInput"
                     value="{copyJob>/newJobName}"
-                    placeholder="Enter new job name"
+                    placeholder="{i18n>copyDialogEnterNewJobName}"
                     width="100%"
                     valueLiveUpdate="true"
                     liveChange=".onCopyJobNameLiveChange"
@@ -36,21 +36,21 @@
                     class="sapUiTinyMarginTop"
                 />
                 <Text
-                    text="You can edit the copied job name before confirmation."
+                    text="{i18n>copyDialogHint}"
                     class="sapUiTinyMarginTop sapUiSmallMarginBottom sapUiContentLabel"
                 />
             </VBox>
         </content>
         <beginButton>
             <Button
-                text="Copy"
+                text="{i18n>btnCopy}"
                 type="Emphasized"
                 press=".onConfirmCopyJob"
             />
         </beginButton>
         <endButton>
             <Button
-                text="Cancel"
+                text="{i18n>btnCancel}"
                 press=".onCloseCopyDialog"
             />
         </endButton>

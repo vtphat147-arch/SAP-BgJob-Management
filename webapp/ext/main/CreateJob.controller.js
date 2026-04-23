@@ -11,6 +11,18 @@ sap.ui.define([
 
     return Controller.extend("project5.ext.main.CreateJob", {
 
+        _getI18nBundle: function () {
+            var oI18nModel = this.getView() && this.getView().getModel("i18n");
+            return oI18nModel && typeof oI18nModel.getResourceBundle === "function"
+                ? oI18nModel.getResourceBundle()
+                : null;
+        },
+
+        _t: function (sKey, aArgs) {
+            var oBundle = this._getI18nBundle();
+            return oBundle ? oBundle.getText(sKey, aArgs || []) : sKey;
+        },
+
         onInit: function () {
             var oData = {
                 jobName: "",
@@ -150,7 +162,7 @@ sap.ui.define([
         onVariantValueHelp: function () {
             var sProgramName = this.getView().getModel("local").getProperty("/programName");
             if (!sProgramName) {
-                MessageToast.show("Please enter Program Name before selecting a Variant.");
+                MessageToast.show(this._t("msgEnterProgramBeforeVariant"));
                 return;
             }
             this._openValueHelp("VariantDialog", "VariantValueHelp", [
@@ -220,7 +232,7 @@ sap.ui.define([
                     "/JobList/com.sap.gateway.srvd.z_sd_job_ovp.v0001.ScheduleJob(...)"
                 );
 
-                oAction.setParameter("JobName", oLocalData.jobName || "New Job");
+                oAction.setParameter("JobName", oLocalData.jobName || this._t("defaultNewJobName"));
                 oAction.setParameter("ProgramName", oLocalData.programName);
                 oAction.setParameter("VariantName", oLocalData.variantName || "");
                 oAction.setParameter("IsImmediate", oLocalData.startImmediately ? "X" : "");
@@ -230,13 +242,13 @@ sap.ui.define([
                 oAction.setParameter("FrequencyValue", iFreqValue);
 
                 oAction.execute().then(function () {
-                    MessageToast.show("Job created successfully!");
+                    MessageToast.show(that._t("msgJobCreatedSuccess"));
                     that.onNavBack();
 
                 }).catch(function (oError) {
                     console.error("Job Creation Failed:", oError);
-                    var sMsg = (oError.error && oError.error.message) || oError.message || "Unknown error";
-                    MessageBox.error("Failed to schedule job.\n\n" + sMsg);
+                    var sMsg = (oError.error && oError.error.message) || oError.message || that._t("labelUnknownError");
+                    MessageBox.error(that._t("msgFailedScheduleJob", [sMsg]));
 
                 }).finally(function () {
                     oView.setBusy(false);
@@ -245,7 +257,7 @@ sap.ui.define([
             } catch (oEx) {
                 console.error("Client Error:", oEx);
                 oView.setBusy(false);
-                MessageBox.error("Client error: " + oEx.message);
+                MessageBox.error(this._t("msgClientError", [oEx.message]));
             }
         },
 

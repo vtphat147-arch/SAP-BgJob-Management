@@ -1,6 +1,6 @@
 <core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
      <TableSelectDialog
-        title="Select Variant"
+          title="{i18n>variantVhTitle}"
         contentWidth="600px"
         class="sapUiPopupWithPadding"
         items="{path: '/Z_I_VariantVH', sorter: { path: 'VariantName' }}"
@@ -10,10 +10,10 @@
         <!-- Định nghĩa các cột -->
         <columns>
             <Column width="40%">
-                <header><Text text="Variant Name" /></header>
+                <header><Text text="{i18n>createJobVariantName}" /></header>
             </Column>
             <Column width="60%">
-                <header><Text text="Created By" /></header>
+                <header><Text text="{i18n>createdBy}" /></header>
             </Column>                           
         </columns>
 

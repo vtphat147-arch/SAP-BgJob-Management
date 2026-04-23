@@ -32,7 +32,7 @@
                 rowPress=".onRowPress"
                 metaPath="/JobList/@com.sap.vocabularies.UI.v1.LineItem#tableMacro2"
                 filterBar="FilterBar"
-                header="Background Jobs"
+                header="{i18n>backgroundJobs}"
                 isSearchable="false"
                 type="ResponsiveTable"
                 enableFullScreen="true"
@@ -42,29 +42,29 @@
             >
                 <macros:actions>
                     <Button
-                        text="🔄 Refresh"
+                        text="{i18n>btnRefreshSticker}"
                         type="Transparent"
                         press="onRefreshTable"
                     />
                     <Button
                         id="btnManage"
-                        text="⚙️ Manage"
+                        text="{i18n>btnManageSticker}"
                         type="Default"
                         press="onOpenManageMenu"
                     />
                     <Button
-                        text="👤 My Jobs"
+                        text="{i18n>btnMyJobsSticker}"
                         type="Emphasized"
                         press="onFilterOwnJobs"
                     />
                     <Button
-                        text="📅 Schedule"
+                        text="{i18n>btnScheduleSticker}"
                         type="Success"
                         press="onCreateJob"
                     />
                     <Button
                         id="btnAnalytics"
-                        text="🔗 Quick Link"
+                        text="{i18n>btnQuickLinkSticker}"
                         type="Transparent"
                         press="onOpenAnalyticsMenu"
                     />
@@ -80,24 +80,24 @@
         >
             <buttons>
                 <Button
-                    text="▶️ Release"
+                    text="{i18n>btnReleaseSticker}"
                     press="onReleaseJob"
                 />
                 <Button
-                    text="🔁 Repeat"
+                    text="{i18n>btnRepeatSticker}"
                     press="onRepeatJob"
                 />
                 <Button
-                    text="📄 Copy"
+                    text="{i18n>btnCopySticker}"
                     press="onCopyWithRename"
                 />
                 <Button
-                    text="⏹️ Stop"
+                    text="{i18n>btnStopSticker}"
                     type="Attention"
                     press="onStopJob"
                 />
                 <Button
-                    text="🗑️ Delete"
+                    text="{i18n>btnDeleteSticker}"
                     type="Reject"
                     press="onDeleteJob"
                 />
@@ -109,11 +109,11 @@
         >
             <buttons>
                 <Button
-                    text="📈 Dashboard"
+                    text="{i18n>btnDashboardSticker}"
                     press="onOpenDashboard"
                 />
                 <Button
-                    text="🔍 Analyze"
+                    text="{i18n>btnAnalyzeSticker}"
                     press="onOpenAnalytics"
                 />
             </buttons>
