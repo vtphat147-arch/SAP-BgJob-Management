@@ -53,7 +53,6 @@
                         press="onOpenManageMenu"
                     />
                     <Button
-                        id="btnMyJobs"
                         text="{i18n>btnMyJobsSticker}"
                         type="Emphasized"
                         press="onFilterOwnJobs"

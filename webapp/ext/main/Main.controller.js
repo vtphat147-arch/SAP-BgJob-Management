@@ -668,19 +668,10 @@ sap.ui.define(
                     oFilterBar.fireSearch();
                 }
 
-                var oBtnMyJobs = this.byId("btnMyJobs");
                 if (!this._bFilteringOwnJobs) {
                     MessageToast.show(this._t("msgShowingAllJobs"));
-                    if (oBtnMyJobs) {
-                        oBtnMyJobs.setText(this._t("btnMyJobsSticker"));
-                        oBtnMyJobs.setType("Emphasized");
-                    }
                 } else {
                     MessageToast.show(this._t("msgFilteringJobsBy", [sCurrentUser]));
-                    if (oBtnMyJobs) {
-                        oBtnMyJobs.setText(this._t("btnShowAllJobsSticker"));
-                        oBtnMyJobs.setType("Accept");
-                    }
                 }
             },
 
