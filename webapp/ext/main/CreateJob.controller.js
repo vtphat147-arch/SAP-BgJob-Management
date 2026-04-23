@@ -75,6 +75,19 @@ sap.ui.define([
         },
 
         onCloseScheduleDialog: function () {
+            var oModel = this.getView().getModel("local");
+            var sRecurrence = oModel.getProperty("/recurrence");
+
+            if (sRecurrence !== "Single Run") {
+                var sFrequency = String(oModel.getProperty("/frequency") || "").trim();
+                var iFreq = Number(sFrequency);
+                
+                if (!/^[1-9]\d*$/.test(sFrequency) || !Number.isInteger(iFreq) || iFreq <= 0) {
+                    MessageBox.error(this._t("msgInvalidFrequency"));
+                    return;
+                }
+            }
+
             this.byId("CreateJobWizard").validateStep(this.byId("Step2"));
             this._pDialog.then(function (oDialog) {
                 oDialog.close();
@@ -225,7 +238,19 @@ sap.ui.define([
                 var mFreqMap = { "Minutes": "MINUTES", "Hourly": "HOURLY", "Daily": "DAILY", "Weekly": "WEEKLY", "Monthly": "MONTHLY" };
                 var sRecurrence = oLocalData.recurrence || "Single Run";
                 var sFreqType = mFreqMap[sRecurrence] || "";
-                var iFreqValue = sFreqType ? (parseInt(oLocalData.frequency) || 1) : 0;
+                
+                var iFreqValue = 0;
+                if (sFreqType) {
+                    var sFreqRaw = String(oLocalData.frequency || "").trim();
+                    var iFreq = Number(sFreqRaw);
+                    
+                    if (!/^[1-9]\d*$/.test(sFreqRaw) || !Number.isInteger(iFreq) || iFreq <= 0) {
+                        MessageBox.error(this._t("msgInvalidFrequency"));
+                        oView.setBusy(false);
+                        return;
+                    }
+                    iFreqValue = iFreq;
+                }
 
                 // 3. Build & execute OData action
                 var oAction = oODataModel.bindContext(
