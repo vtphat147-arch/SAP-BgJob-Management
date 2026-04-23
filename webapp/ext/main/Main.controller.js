@@ -310,12 +310,19 @@ sap.ui.define(
                 var aErrorMessages = aMessages.filter(function (m) { return m.type === "Error"; });
 
                 // Show BE success messages
-                if (aSuccessMessages.length > 0) {
-                    var sSuccessText = aSuccessMessages.map(function (m) { return m.message; }).join("\n");
-                    MessageToast.show(sSuccessText);
-                } else if (aSuccess.length > 0) {
-                    // Fallback if BE didn't return specific messages
-                    MessageToast.show(this._t("msgExecuteCompletedFor", [sLabel, aSuccess.join(", ")]));
+                if (aSuccess.length > 1) {
+                    var sJobNames = aSuccess.length <= 3 ? ": " + aSuccess.join(", ") : "";
+                    MessageToast.show(this._t("msgExecuteCompletedMultiple", [sLabel, aSuccess.length]) + sJobNames);
+                } else if (aSuccess.length === 1) {
+                    if (aSuccessMessages.length > 0) {
+                        var aUniqueMsgs = [];
+                        aSuccessMessages.forEach(function (m) {
+                            if (aUniqueMsgs.indexOf(m.message) === -1) aUniqueMsgs.push(m.message);
+                        });
+                        MessageToast.show(aUniqueMsgs.join("\n") + " (" + aSuccess[0] + ")");
+                    } else {
+                        MessageToast.show(this._t("msgExecuteCompletedFor", [sLabel, aSuccess[0]]));
+                    }
                 }
 
                 // Show BE error messages
