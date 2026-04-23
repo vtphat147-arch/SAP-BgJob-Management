@@ -126,7 +126,20 @@ sap.ui.define([
             }
 
             this["_p" + sDialogKey].then(function (oDialog) {
-                oDialog.getBinding("items").filter(aInitialFilters || []);
+                var oBinding = oDialog.getBinding("items");
+                if (oBinding) {
+                    oBinding.filter(aInitialFilters || []);
+                }
+                
+                // Clear selection
+                if (typeof oDialog.clearSelection === "function") {
+                    oDialog.clearSelection();
+                }
+                // Clear search string if possible (TableSelectDialog uses internal search field)
+                if (oDialog._oSearchField) {
+                    oDialog._oSearchField.setValue("");
+                }
+                
                 oDialog.open();
             });
         },
