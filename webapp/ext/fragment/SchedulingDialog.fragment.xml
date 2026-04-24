@@ -35,6 +35,7 @@
                             value="{local>/frequency}" 
                             type="Number" 
                             width="4rem" 
+                            maxLength="4"
                             textAlign="End"
                             class="sapUiTinyMarginEnd" />
                         

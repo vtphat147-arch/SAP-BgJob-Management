@@ -82,7 +82,7 @@ sap.ui.define([
                 var sFrequency = String(oModel.getProperty("/frequency") || "").trim();
                 var iFreq = Number(sFrequency);
                 
-                if (!/^[1-9]\d*$/.test(sFrequency) || !Number.isInteger(iFreq) || iFreq <= 0) {
+                if (!/^[1-9]\d*$/.test(sFrequency) || !Number.isInteger(iFreq) || iFreq <= 0 || iFreq > 9999) {
                     MessageBox.error(this._t("msgInvalidFrequency"));
                     return;
                 }
@@ -257,7 +257,7 @@ sap.ui.define([
                     var sFreqRaw = String(oLocalData.frequency || "").trim();
                     var iFreq = Number(sFreqRaw);
                     
-                    if (!/^[1-9]\d*$/.test(sFreqRaw) || !Number.isInteger(iFreq) || iFreq <= 0) {
+                    if (!/^[1-9]\d*$/.test(sFreqRaw) || !Number.isInteger(iFreq) || iFreq <= 0 || iFreq > 9999) {
                         MessageBox.error(this._t("msgInvalidFrequency"));
                         oView.setBusy(false);
                         return;
