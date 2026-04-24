@@ -41,15 +41,17 @@ sap.ui.define([
             var oModel = this.getView().getModel("local");
             var sJob = (oModel.getProperty("/jobName") || "").trim();
             var sProg = (oModel.getProperty("/programName") || "").trim();
-            var sVariant = (oModel.getProperty("/variantName") || "").trim();
 
-            // Show Step 1 error states only after user starts interacting.
-            var bHasInteraction = sJob.length > 0 || sProg.length > 0 || sVariant.length > 0;
-            oModel.setProperty("/showStep1Errors", bHasInteraction);
+            // Job Name: No special chars like * ? " 
+            var bJobValid = sJob.length > 0 && sJob.length <= 32 && /^[a-zA-Z0-9_\- ]+$/.test(sJob);
+            // Program Name: No spaces, no Vietnamese, alphanumeric + _ -
+            var bProgValid = sProg.length > 0 && sProg.length <= 40 && /^[a-zA-Z0-9_\-]+$/.test(sProg);
 
-            // Variant is optional (SM36 behavior). Only Job Name + Program Name are required.
-            var bValid = sJob.length > 0 && sProg.length > 0;
-            this.byId("Step1").setValidated(bValid);
+            oModel.setProperty("/isJobValid", bJobValid);
+            oModel.setProperty("/isProgValid", bProgValid);
+            oModel.setProperty("/showStep1Errors", sJob.length > 0 || sProg.length > 0);
+
+            this.byId("Step1").setValidated(bJobValid && bProgValid);
         },
 
         onOpenScheduleDialog: function () {
@@ -232,9 +234,21 @@ sap.ui.define([
             oView.setBusy(true);
 
             try {
+                // Final validation before sending to OData
+                var sJobName = (oLocalData.jobName || "").trim();
+                var sProgramName = (oLocalData.programName || "").trim();
+
+                var bJobValid = sJobName.length > 0 && sJobName.length <= 32 && /^[a-zA-Z0-9_\- ]+$/.test(sJobName);
+                var bProgValid = sProgramName.length > 0 && sProgramName.length <= 40 && /^[a-zA-Z0-9_\-]+$/.test(sProgramName);
+
+                if (!bJobValid || !bProgValid) {
+                    MessageBox.error(this._t("msgPleaseFixErrors"));
+                    oView.setBusy(false);
+                    return;
+                }
+
                 // 1. Convert date → SAP server timezone (Europe/Berlin, auto DST)
                 var oDate = oLocalData.startDate ? new Date(oLocalData.startDate) : new Date();
-                if (isNaN(oDate.getTime())) { oDate = new Date(); }
 
                 var oParts = {};
                 new Intl.DateTimeFormat('en-CA', {

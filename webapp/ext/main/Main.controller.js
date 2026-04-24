@@ -429,11 +429,19 @@ sap.ui.define(
                 var oInput = this.byId("copyJobNameInput");
                 var oDialog = this.byId("copyJobDialog");
                 var sValue = oInput ? (oInput.getValue() || "").trim() : "";
-                var bValid = !!sValue;
+                
+                // Job Name: No special chars like * ? " and max 32 chars
+                var bFormatValid = /^[a-zA-Z0-9_\- ]+$/.test(sValue);
+                var bLengthValid = sValue.length > 0 && sValue.length <= 32;
+                var bValid = bFormatValid && bLengthValid;
 
                 if (oInput) {
                     oInput.setValueState(bValid ? "None" : "Error");
-                    oInput.setValueStateText(this._t("msgJobNameRequired"));
+                    if (sValue.length === 0) {
+                        oInput.setValueStateText(this._t("msgJobNameRequired"));
+                    } else if (sValue.length > 32 || !bFormatValid) {
+                        oInput.setValueStateText(this._t("createJobInvalidJobName"));
+                    }
                 }
 
                 if (oDialog && oDialog.getBeginButton()) {
@@ -450,7 +458,7 @@ sap.ui.define(
                 var sNewJobName = oInput ? (oInput.getValue() || "").trim() : "";
                 var oContext = this._oCopySourceContext;
 
-                if (!sNewJobName) {
+                if (!sNewJobName || sNewJobName.length > 32 || !/^[a-zA-Z0-9_\- ]+$/.test(sNewJobName)) {
                     this._syncCopyDialogState();
                     return;
                 }

@@ -17,8 +17,9 @@
                                 value="{local>/jobName}" 
                                 liveChange=".onCheckStep1" 
                                 placeholder="{i18n>createJobEnterJobNamePlaceholder}"
-                                valueState="{= ${local>/showStep1Errors} &amp;&amp; ${local>/jobName}.length === 0 ? 'Error' : 'None' }"
-                                valueStateText="{i18n>createJobPleaseEnterJobName}"/>
+                                maxLength="32"
+                                valueState="{= ${local>/showStep1Errors} &amp;&amp; !${local>/isJobValid} ? 'Error' : 'None' }"
+                                valueStateText="{= ${local>/jobName}.length === 0 ? ${i18n>createJobPleaseEnterJobName} : ${i18n>createJobInvalidJobName} }"/>
                             
                            <Label text="{i18n>createJobProgramName}" required="true"/>
                             <Input id="inpProgram"
@@ -28,9 +29,10 @@
                                 valueHelpRequest=".onProgramValueHelp"
                                 change=".onProgramChange" 
                                 showSuggestion="true"
+                                maxLength="40"
                                 suggestionItems="{/Z_I_ProgramVH}" 
-                                valueState="{= ${local>/showStep1Errors} &amp;&amp; ${local>/programName}.length === 0 ? 'Error' : 'None' }"
-                                valueStateText="{i18n>createJobPleaseEnterOrSelectProgramName}">
+                                valueState="{= ${local>/showStep1Errors} &amp;&amp; !${local>/isProgValid} ? 'Error' : 'None' }"
+                                valueStateText="{= ${local>/programName}.length === 0 ? ${i18n>createJobPleaseEnterOrSelectProgramName} : ${i18n>createJobInvalidProgramName} }">
 
                                 
                                 
