@@ -218,25 +218,61 @@ sap.ui.define(
                     contexts: aSelectedContexts,
                     parameterValues: aParameterValues,
                     skipParameterDialog: true
-                }).then(function () {
+                }).then(function (oResponse) {
                     BusyIndicator.hide();
 
+                    // --- CHECK BACKEND FAILED RESPONSE & MESSAGES ---
+                    var bBackendFailed = false;
+                    var sCustomErrorMsg = "";
+
+                    // Kiểm tra data trả về từ HTTP 200 payload nếu action return custom object (vd: failed-joblist + error message)
+                    if (oResponse) {
+                        // oResponse có thể là context array hoặc instance
+                        var oResultTarget = Array.isArray(oResponse) ? oResponse[0] : oResponse;
+                        var oResultData = oResultTarget && typeof oResultTarget.getObject === "function" ? oResultTarget.getObject() : oResultTarget;
+                        
+                        if (oResultData) {
+                            if (oResultData.value) { 
+                                oResultData = oResultData.value; 
+                            }
+                            // Tùy theo định dạng trả về của Backend
+                            if (oResultData.failed || oResultData.failed === "true" || oResultData.status === "ERROR") {
+                                bBackendFailed = true;
+                            }
+                            if (oResultData.error_message || oResultData.message) {
+                                sCustomErrorMsg = oResultData.error_message || oResultData.message;
+                            }
+                        }
+                    }
+
                     var aNewMessages = fnGetMessages().slice(iMessageCountBefore);
-                    var bHasNewError = aNewMessages.some(function (oMsg) {
-                        var sType = (oMsg && oMsg.type ? oMsg.type : "").toLowerCase();
-                        return sType === "error";
+                    var aErrorMessages = aNewMessages.filter(function (oMsg) {
+                        return (oMsg && oMsg.type ? oMsg.type : "").toLowerCase() === "error";
                     });
+                    var bHasNewError = aErrorMessages.length > 0;
 
                     var bHasProviderError = aNewMessages.some(function (oMsg) {
                         var sText = oMsg && oMsg.message ? oMsg.message : "";
                         return /unspecified provider error occurred/i.test(sText);
                     });
 
-                    if (bHasNewError || bHasProviderError) {
-                        console.warn("Action returned error messages, success toast suppressed.", aNewMessages);
+                    // NẾU CÓ LỖI TỪ Fiori Messages HOẶC Backend payload return fail:
+                    if (bHasNewError || bHasProviderError || bBackendFailed) {
+                        console.warn("Action returned error messages or failed payload.", aNewMessages, oResponse);
                         that._bConfirmInFlight = false;
                         that._refreshTable();
-                        return;
+                        
+                        // Hiển thị Error message cho User
+                        if (sCustomErrorMsg) {
+                            MessageBox.error(sCustomErrorMsg);
+                        } else if (aErrorMessages.length > 0) {
+                            var sAllErrors = aErrorMessages.map(function(m) { return m.message; }).join("\n");
+                            MessageBox.error(sAllErrors);
+                        } else {
+                            MessageBox.error(that._t("msgExecutionFailed", [that._t("msgTryAgain")]));
+                        }
+                        
+                        return; // NGĂN CHẶN HIỆN SUCCESS TOAST
                     }
 
                     // Read BE success message from Message Class
@@ -297,7 +333,28 @@ sap.ui.define(
                     try {
                         var oActionContext = oContext.getModel().bindContext(sActionName + "(...)", oContext);
                         await oActionContext.execute();
-                        aSuccess.push(sJobName);
+                        
+                        // --- CHECK BACKEND FAILED RESPONSE ---
+                        var oResult = oActionContext.getObject();
+                        var bBackendFailed = false;
+                        var sCustomErrorMsg = "";
+                        
+                        if (oResult) {
+                            if (oResult.value) oResult = oResult.value;
+                            if (oResult.failed || oResult.failed === "true" || oResult.status === "ERROR") {
+                                bBackendFailed = true;
+                            }
+                            if (oResult.error_message || oResult.message) {
+                                sCustomErrorMsg = oResult.error_message || oResult.message;
+                            }
+                        }
+
+                        if (bBackendFailed) {
+                            var sErr = sCustomErrorMsg || this._t("labelUnknownError");
+                            aFailed.push({ name: sJobName, error: sErr });
+                        } else {
+                            aSuccess.push(sJobName);
+                        }
                     } catch (oError) {
                         var sErr = oError?.error?.message || oError?.message || this._t("labelUnknownError");
                         aFailed.push({ name: sJobName, error: sErr });
@@ -480,13 +537,58 @@ sap.ui.define(
                         { name: "NewJobName", value: sNewJobName }
                     ],
                     skipParameterDialog: true
-                }).then(function () {
+                }).then(function (oResponse) {
                     BusyIndicator.hide();
-                    // Read BE success message from Message Class
+                    
+                    // --- CHECK BACKEND FAILED RESPONSE & MESSAGES ---
+                    var bBackendFailed = false;
+                    var sCustomErrorMsg = "";
+
+                    if (oResponse) {
+                        var oResultTarget = Array.isArray(oResponse) ? oResponse[0] : oResponse;
+                        var oResultData = oResultTarget && typeof oResultTarget.getObject === "function" ? oResultTarget.getObject() : oResultTarget;
+                        
+                        if (oResultData) {
+                            if (oResultData.value) { 
+                                oResultData = oResultData.value; 
+                            }
+                            if (oResultData.failed || oResultData.failed === "true" || oResultData.status === "ERROR") {
+                                bBackendFailed = true;
+                            }
+                            if (oResultData.error_message || oResultData.message) {
+                                sCustomErrorMsg = oResultData.error_message || oResultData.message;
+                            }
+                        }
+                    }
+
                     var oMsgMgr = sap.ui.getCore().getMessageManager();
-                    var aMsgs = (oMsgMgr.getMessageModel().getData() || []).filter(function (m) { return m.type === "Success"; });
-                    if (aMsgs.length > 0) {
-                        MessageToast.show(aMsgs.map(function (m) { return m.message; }).join("\n"));
+                    var aMsgs = oMsgMgr.getMessageModel().getData() || [];
+                    var aErrorMessages = aMsgs.filter(function (m) { return m.type === "Error"; });
+
+                    if (aErrorMessages.length > 0 || bBackendFailed) {
+                        console.warn("Action returned error messages or failed payload.", aMsgs, oResponse);
+                        that.onCloseCopyDialog();
+                        that._refreshTable();
+                        
+                        if (sCustomErrorMsg) {
+                            MessageBox.error(sCustomErrorMsg);
+                        } else if (aErrorMessages.length > 0) {
+                            var sAllErrors = aErrorMessages.map(function(m) { return m.message; }).join("\n");
+                            MessageBox.error(sAllErrors);
+                        } else {
+                            MessageBox.error(that._t("msgCopyFailed", [that._t("msgTryAgain")]));
+                        }
+                        return;
+                    }
+
+                    // Read BE success message from Message Class
+                    var aSuccessMsgs = aMsgs.filter(function (m) { return m.type === "Success"; });
+                    if (aSuccessMsgs.length > 0) {
+                        var aUniqueMsgs = [];
+                        aSuccessMsgs.forEach(function (m) {
+                            if (aUniqueMsgs.indexOf(m.message) === -1) aUniqueMsgs.push(m.message);
+                        });
+                        MessageToast.show(aUniqueMsgs.join("\n"));
                     } else {
                         MessageToast.show(that._t("msgCopyRenameSuccess"));
                     }
