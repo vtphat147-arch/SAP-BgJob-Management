@@ -227,50 +227,23 @@ sap.ui.define(
             },
 
             // ==================== HELPER: Gọi Bound Action cho nhiều dòng ====================
-            _executeAction: async function (aContexts, sActionName, sLabel, oOptions) {
-                var aSuccess = [];
-                var aFailed = [];
+            _executeAction: async function (aContexts, sActionName, sLabel) {
+                sap.ui.getCore().getMessageManager().removeAllMessages();
 
-                // --- 0. Clear old messages ---
-                var oMessageManager = sap.ui.getCore().getMessageManager();
-                oMessageManager.removeAllMessages();
+                const results = await Promise.allSettled(
+                    aContexts.map(ctx => ctx.getModel().bindContext(sActionName + "(...)", ctx).execute())
+                );
 
-                // Execute sequentially to avoid SAP batch errors
-                for (var oContext of aContexts) {
-                    var sJobName = oContext.getProperty("JobName") || "(unknown)";
-                    try {
-                        var oActionContext = oContext.getModel().bindContext(sActionName + "(...)", oContext);
-                        await oActionContext.execute();
-                        aSuccess.push(sJobName);
-                    } catch (oError) {
-                        var sErr = oError?.error?.message || oError?.message || "Unknown error";
-                        aFailed.push({ name: sJobName, error: sErr });
-                    }
-                }
+                const aSuccess = [], aFailed = [];
+                results.forEach((r, i) => {
+                    const sName = aContexts[i].getProperty("JobName") || "(unknown)";
+                    r.status === "fulfilled"
+                        ? aSuccess.push(sName)
+                        : aFailed.push(`• ${sName}: ${r.reason?.error?.message || r.reason?.message || "Unknown error"}`);
+                });
 
-                // --- Read messages returned by BE (from Message Class ZCM_BC_BJSMS_MSG) ---
-                var aMessages = oMessageManager.getMessageModel().getData() || [];
-                var aSuccessMessages = aMessages.filter(function (m) { return m.type === "Success"; });
-                var aErrorMessages = aMessages.filter(function (m) { return m.type === "Error"; });
-
-                // Show BE success messages
-                if (aSuccessMessages.length > 0) {
-                    var sSuccessText = aSuccessMessages.map(function (m) { return m.message; }).join("\n");
-                    MessageToast.show(sSuccessText);
-                } else if (aSuccess.length > 0) {
-                    // Fallback if BE didn't return specific messages
-                    MessageToast.show(sLabel + " completed for: " + aSuccess.join(", "));
-                }
-
-                // Show BE error messages
-                if (aErrorMessages.length > 0) {
-                    var sErrorText = aErrorMessages.map(function (m) { return "• " + m.message; }).join("\n");
-                    MessageBox.error(sErrorText);
-                } else if (aFailed.length > 0) {
-                    // Fallback
-                    var sErrors = aFailed.map(function (r) { return "• " + r.name + ": " + r.error; }).join("\n");
-                    MessageBox.error(sLabel + " failed for " + aFailed.length + " job(s):\n\n" + sErrors);
-                }
+                MessageToast.show(aSuccess.length ? `${sLabel} OK: ${aSuccess.join(", ")}` : "Done");
+                if (aFailed.length) MessageBox.error(aFailed.join("\n"));
 
                 this._refreshTable();
             },
@@ -619,11 +592,11 @@ sap.ui.define(
             },
 
             // ==================== OPEN ANALYTICS MENU ====================
-            onOpenAnalyticsMenu: function(e) { this.byId("analyticsActionSheet").openBy(e.getSource()); },
-            onOpenDashboard: function() {
+            onOpenAnalyticsMenu: function (e) { this.byId("analyticsActionSheet").openBy(e.getSource()); },
+            onOpenDashboard: function () {
                 window.open("https://s40lp1.ucc.cit.tum.de/sap/bc/ui2/flp?sap-client=324&sap-language=EN#ZSO_JOB_F0703-display", "_self");
             },
-            onOpenAnalytics: function() {
+            onOpenAnalytics: function () {
                 window.open("/sap/bc/ui5_ui5/sap/zui_j_analytics/?sap-client=324&sap-language=EN#/?sap-iapp-state--history=1", "_self");
             },
 

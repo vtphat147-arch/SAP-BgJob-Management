@@ -2,7 +2,7 @@
 
 specVersion: "4.0"
 metadata:
-  name: project5
+  name: ZJOBF0701
 type: application
 builder:
   resources:
@@ -21,6 +21,6 @@ builder:
           name: ZJOBF0701
           description: Background Job Management draft
           package: ZSP26_GSP07_DEVELOPMENT
-          transport: S40K915829
+          transport: S40K917560
         exclude:
           - /test/
