@@ -244,9 +244,7 @@ sap.ui.define(
 
                 var bIsSuccess = that._handleActionMessages(sActionLabel + " completed successfully.", aFailedMessages);
 
-                if (bIsSuccess) {
-                    that.onCloseReleaseDialog();
-                }
+                that.onCloseReleaseDialog();
                 that._refreshTable();
             },
 
@@ -517,8 +515,8 @@ sap.ui.define(
                 
                 var bIsSuccess = that._handleActionMessages("Copy and Rename completed successfully.", aFailedMessages);
                 
+                that.onCloseCopyDialog();
                 if (bIsSuccess) {
-                    that.onCloseCopyDialog();
                     that._clearStartDateFilter();
                 }
                 that._refreshTable();
