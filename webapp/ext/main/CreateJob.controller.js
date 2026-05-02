@@ -16,7 +16,7 @@ sap.ui.define([
                 jobName: "",
                 programName: "",
                 variantName: "",
-                showStep1Errors: false,
+                touched: false,
                 startImmediately: true,
                 startDate: new Date(),
                 recurrence: "Single Run"
@@ -25,19 +25,8 @@ sap.ui.define([
             this.getView().setModel(oModel, "local");
         },
 
-        onCheckStep1: function () {
-            var oModel = this.getView().getModel("local");
-            var sJob = (oModel.getProperty("/jobName") || "").trim();
-            var sProg = (oModel.getProperty("/programName") || "").trim();
-            var sVariant = (oModel.getProperty("/variantName") || "").trim();
-
-            // Show Step 1 error states only after user starts interacting.
-            var bHasInteraction = sJob.length > 0 || sProg.length > 0 || sVariant.length > 0;
-            oModel.setProperty("/showStep1Errors", bHasInteraction);
-
-            // Variant is optional (SM36 behavior). Only Job Name + Program Name are required.
-            var bValid = sJob.length > 0 && sProg.length > 0;
-            this.byId("Step1").setValidated(bValid);
+        onMarkTouched: function () {
+            this.getView().getModel("local").setProperty("/touched", true);
         },
 
         onOpenScheduleDialog: function () {
@@ -132,7 +121,7 @@ sap.ui.define([
                 var oModel = this.getView().getModel("local");
                 oModel.setProperty("/programName", oSelectedItem.getCells()[0].getText());
                 oModel.setProperty("/variantName", "");
-                this.onCheckStep1();
+                this.onMarkTouched();
             }
         },
 
@@ -143,7 +132,7 @@ sap.ui.define([
                 oModel.setProperty("/programName", sValue.toUpperCase());
                 oModel.setProperty("/variantName", "");
             }
-            this.onCheckStep1();
+            this.onMarkTouched();
         },
 
         // ========== VARIANT VALUE HELP ==========
@@ -172,7 +161,7 @@ sap.ui.define([
             var oSelectedItem = oEvent.getParameter("selectedItem");
             if (!oSelectedItem) { return; }
             this.getView().getModel("local").setProperty("/variantName", oSelectedItem.getCells()[0].getText());
-            this.onCheckStep1();
+            this.onMarkTouched();
         },
 
 
@@ -230,7 +219,16 @@ sap.ui.define([
                 oAction.setParameter("FrequencyValue", iFreqValue);
 
                 oAction.execute().then(function () {
-                    MessageToast.show("Job created successfully!");
+                    // Read success message from BE (msg 004/005 from ZCM_BC_BJSMS_MSG)
+                    var aMessages = sap.ui.getCore().getMessageManager().getMessageModel().getData();
+                    var sMsg = "Job created successfully!"; // Fallback
+                    for (var i = aMessages.length - 1; i >= 0; i--) {
+                        if (aMessages[i].type === "Success") {
+                            sMsg = aMessages[i].message;
+                            break;
+                        }
+                    }
+                    MessageToast.show(sMsg);
                     that.onNavBack();
 
                 }).catch(function (oError) {

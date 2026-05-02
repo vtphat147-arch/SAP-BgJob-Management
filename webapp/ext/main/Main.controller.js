@@ -60,10 +60,11 @@ sap.ui.define(
                 if (this._pReleaseDialog) {
                     this._pReleaseDialog.then(function (oDialog) {
                         oDialog.setTitle(sTitle);
+                        this._resetReleaseDialog();
                         if (!oDialog.isOpen()) {
                             oDialog.open();
                         }
-                    });
+                    }.bind(this));
                     return;
                 }
 
@@ -74,9 +75,39 @@ sap.ui.define(
                 }).then(function (oDialog) {
                     this.getView().addDependent(oDialog);
                     oDialog.setTitle(sTitle);
+                    this._resetReleaseDialog();
                     oDialog.open();
                     return oDialog;
                 }.bind(this));
+            },
+
+            _resetReleaseDialog: function () {
+                var oModel = this.getView().getModel("localRelease");
+                if (!oModel) {
+                    oModel = new sap.ui.model.json.JSONModel({
+                        isImmediate: false
+                    });
+                    this.getView().setModel(oModel, "localRelease");
+                } else {
+                    oModel.setProperty("/isImmediate", false);
+                }
+
+                var oDate = this.byId("idReleaseDate");
+                if (oDate) { oDate.setValue(""); oDate.setValueState("None"); }
+
+                var oTime = this.byId("idReleaseTime");
+                if (oTime) { oTime.setValue(""); oTime.setValueState("None"); }
+
+                var oTabBar = this.byId("idStartModeTabs");
+                if (oTabBar) { oTabBar.setSelectedKey("scheduled"); }
+            },
+
+            onImmediateChange: function (oEvent) {
+                var bSelected = oEvent.getParameter("selected");
+                var oModel = this.getView().getModel("localRelease");
+                if (oModel) {
+                    oModel.setProperty("/isImmediate", bSelected);
+                }
             },
 
             onConfirmRelease: function () {
@@ -129,10 +160,23 @@ sap.ui.define(
                 }
 
                 // --- 4. VALIDATE: Nếu không phải Immediate thì phải có Date và Time ---
-                if (!bIsImmediate && (!sSapDate || !sSapTime)) {
-                    MessageToast.show("Please enter start date and start time.");
-                    this._bConfirmInFlight = false;
-                    return;
+                if (!bIsImmediate) {
+                    if (!sSapDate || !sSapTime) {
+                        MessageToast.show("Please enter start date and start time.");
+                        this._bConfirmInFlight = false;
+                        return;
+                    }
+
+                    // Validate that the scheduled date/time is not in the past (allow 1 minute tolerance)
+                    if (oDate) {
+                        var oNow = new Date();
+                        oNow.setMinutes(oNow.getMinutes() - 1);
+                        if (oDate < oNow) {
+                            MessageBox.error("The scheduled start date and time cannot be in the past.");
+                            this._bConfirmInFlight = false;
+                            return;
+                        }
+                    }
                 }
 
                 var aParameterValues = [
@@ -234,15 +278,23 @@ sap.ui.define(
                     aContexts.map(ctx => ctx.getModel().bindContext(sActionName + "(...)", ctx).execute())
                 );
 
-                const aSuccess = [], aFailed = [];
+                const aFailed = [];
                 results.forEach((r, i) => {
-                    const sName = aContexts[i].getProperty("JobName") || "(unknown)";
-                    r.status === "fulfilled"
-                        ? aSuccess.push(sName)
-                        : aFailed.push(`• ${sName}: ${r.reason?.error?.message || r.reason?.message || "Unknown error"}`);
+                    if (r.status !== "fulfilled") {
+                        const sName = aContexts[i].getProperty("JobName") || "(unknown)";
+                        aFailed.push(`• ${sName}: ${r.reason?.error?.message || r.reason?.message || "Unknown error"}`);
+                    }
                 });
 
-                MessageToast.show(aSuccess.length ? `${sLabel} OK: ${aSuccess.join(", ")}` : "Done");
+                // Read success messages from BE (via MessageManager, e.g. msg 012/015 from ZCM_BC_BJSMS_MSG)
+                const aAllMsgs = sap.ui.getCore().getMessageManager().getMessageModel().getData();
+                const aSuccessMsgs = aAllMsgs.filter(m => m.type === "Success").map(m => m.message);
+
+                if (aSuccessMsgs.length) {
+                    MessageToast.show(aSuccessMsgs.join(" | "));
+                } else if (!aFailed.length) {
+                    MessageToast.show(sLabel + " completed.");
+                }
                 if (aFailed.length) MessageBox.error(aFailed.join("\n"));
 
                 this._refreshTable();
@@ -273,14 +325,28 @@ sap.ui.define(
                     return;
                 }
 
-                if (aSelectedContexts.length > 1) {
-                    MessageToast.show("Only the first selected job will be copied.");
-                }
-
                 var oSelectedContext = aSelectedContexts[0];
                 var sOldJobName = oSelectedContext.getProperty("JobName") || "";
-
                 this._oCopySourceContext = oSelectedContext;
+
+                var that = this;
+
+                if (aSelectedContexts.length > 1) {
+                    MessageBox.warning(
+                        "You have selected multiple jobs. Only the first selected job (" + sOldJobName + ") will be copied.\n\nDo you want to continue?", 
+                        {
+                            title: "Multiple Jobs Selected",
+                            actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
+                            onClose: function (sAction) {
+                                if (sAction === MessageBox.Action.OK) {
+                                    that._openCopyDialog(sOldJobName);
+                                }
+                            }
+                        }
+                    );
+                    return;
+                }
+
                 this._openCopyDialog(sOldJobName);
             },
 
@@ -524,47 +590,28 @@ sap.ui.define(
             },
 
             onFilterOwnJobs: function () {
-                var sCurrentUser = "";
+                var sCurrentUser = sap.ushell?.Container
+                    ? sap.ushell.Container.getService("UserInfo").getId()
+                    : "DEV-119";
 
-                // 1. Lấy user đang đăng nhập (Trong Fiori Launchpad hoặc Sandbox)
-                if (sap.ushell && sap.ushell.Container) {
-                    sCurrentUser = sap.ushell.Container.getService("UserInfo").getId();
+                if (!sCurrentUser) return;
+
+                var oFilterBar = this.byId("FilterBar")?.getContent();
+                if (!oFilterBar?.getFilterConditions) return;
+
+                var mConditions = Object.assign({}, oFilterBar.getFilterConditions());
+
+                if (this._bFilteringOwnJobs) {
+                    delete mConditions.CreatedBy;
+                    MessageToast.show("Showing all jobs.");
                 } else {
-                    // Nếu chạy chay (index.html) không có FLP, đành chịu không biết ai đăng nhập
-                    sCurrentUser = "";
-                    MessageToast.show("Warning: Not running in Fiori Launchpad. Cannot detect current user.");
+                    mConditions.CreatedBy = [{ operator: "EQ", values: [sCurrentUser], validated: "Validated" }];
+                    MessageToast.show("Filtering jobs by: " + sCurrentUser);
                 }
 
-                if (!sCurrentUser) {
-                    return; // Nếu không biết user là ai thì không filter được
-                }
-
-                // 2. Tìm binding của bảng
-                var oMacroTable = this.byId("Table");
-                if (!oMacroTable) { return; }
-
-                var oInnerTable = oMacroTable.getContent();
-                var oBinding = null;
-                if (oInnerTable) {
-                    oBinding = oInnerTable.getBinding("rows") || oInnerTable.getBinding("items");
-                }
-                if (!oBinding && oInnerTable && typeof oInnerTable.getRowBinding === "function") {
-                    oBinding = oInnerTable.getRowBinding();
-                }
-
-                // 3. Toggle filter: press 1 → filter, press 2 → clear
-                if (oBinding) {
-                    if (this._bFilteringOwnJobs) {
-                        oBinding.filter([], "Application");
-                        this._bFilteringOwnJobs = false;
-                        MessageToast.show("Showing all jobs.");
-                    } else {
-                        var oFilter = new Filter("CreatedBy", FilterOperator.EQ, sCurrentUser);
-                        oBinding.filter(oFilter, "Application");
-                        this._bFilteringOwnJobs = true;
-                        MessageToast.show("Filtering jobs by: " + sCurrentUser);
-                    }
-                }
+                oFilterBar.setFilterConditions(mConditions);
+                oFilterBar.triggerSearch?.();
+                this._bFilteringOwnJobs = !this._bFilteringOwnJobs;
             },
             // --- THÊM HÀM NÀY ĐỂ ĐIỀU HƯỚNG SANG TRANG DETAIL (GIỐNG SM37) ---
             onRowPress: function (oEvent) {

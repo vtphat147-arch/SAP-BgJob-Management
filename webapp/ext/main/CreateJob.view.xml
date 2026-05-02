@@ -1,103 +1,150 @@
-<mvc:View 
-    controllerName="project5.ext.main.CreateJob" 
-    xmlns:mvc="sap.ui.core.mvc" 
-    xmlns="sap.m" 
+<mvc:View
+    controllerName="project5.ext.main.CreateJob"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
     xmlns:f="sap.ui.layout.form"
-    xmlns:core="sap.ui.core">
-    
-    <Page id="wizardPage" title="New Background Job" showNavButton="true" navButtonPress=".onNavBack" class="sapUiResponsiveContentPadding">
+    xmlns:core="sap.ui.core"
+>
+    <Page
+        id="wizardPage"
+        title="New Background Job"
+        showNavButton="true"
+        navButtonPress=".onNavBack"
+        class="sapUiResponsiveContentPadding"
+    >
         <content>
-            <Wizard id="CreateJobWizard" complete="onWizardCompleted" finishButtonText="Schedule">
-                
-                <WizardStep id="Step1" title="Template Selection" validated="false" activate="onStep1Activate">
-                    <f:SimpleForm editable="true" layout="ResponsiveGridLayout">
+            <Wizard
+                id="CreateJobWizard"
+                complete="onWizardCompleted"
+                finishButtonText="Schedule"
+            >
+                <WizardStep
+                    id="Step1"
+                    title="Template Selection"
+                    validated="{= !!${local>/jobName} &amp;&amp; !!${local>/programName}}"
+                >
+                    <f:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                    >
                         <f:content>
-                            <Label text="Job Name" required="true"/>
-                            <Input id="inpJobName" 
-                                value="{local>/jobName}" 
-                                liveChange=".onCheckStep1" 
-                                placeholder="Enter job name..."
-                                valueState="{= ${local>/showStep1Errors} &amp;&amp; ${local>/jobName}.length === 0 ? 'Error' : 'None' }"
-                                valueStateText="Please enter a Job Name."/>
-                            
-                           <Label text="Program Name" required="true"/>
-                            <Input id="inpProgram"
-                                value="{local>/programName}" 
-                                placeholder="Enter program name..." 
-                                showValueHelp="true" 
+                            <Label
+                                text="Job Name"
+                                required="true"
+                            />
+                            <Input
+                                value="{local>/jobName}"
+                                maxLength="32"
+                                liveChange=".onMarkTouched"
+                                placeholder="Enter job name (max 32 chars)
+                                       ..."
+                                valueState="{= ${local>/touched} &amp;&amp; !${local>/jobName} ? 'Error' : 'None'}"
+                                valueStateText="Please enter a Job Name."
+                            />
+                            <Label
+                                text="Program Name"
+                                required="true"
+                            />
+                            <Input
+                                value="{local>/programName}"
+                                maxLength="40"
+                                placeholder="Enter program name (max 40 chars)
+                                       ..."
+                                showValueHelp="true"
                                 valueHelpRequest=".onProgramValueHelp"
-                                change=".onProgramChange" 
+                                change=".onProgramChange"
                                 showSuggestion="true"
-                                suggestionItems="{/Z_I_ProgramVH}" 
-                                valueState="{= ${local>/showStep1Errors} &amp;&amp; ${local>/programName}.length === 0 ? 'Error' : 'None' }"
-                                valueStateText="Please enter or select a Program Name.">
-
-                                
-                                
+                                suggestionItems="{/Z_I_ProgramVH}"
+                                valueState="{= ${local>/touched} &amp;&amp; !${local>/programName} ? 'Error' : 'None'}"
+                                valueStateText="Please enter or select a Program Name."
+                            >
                                 <suggestionItems>
-                                    <core:ListItem text="{ProgramName}" additionalText="{Description}"/>
+                                    <core:ListItem
+                                        text="{ProgramName}"
+                                        additionalText="{Description}"
+                                    />
                                 </suggestionItems>
                             </Input>
-                        
-                            <Label text="Variant Name" required="false"/>
-                            <Input id="inpVariant" 
-                                value="{local>/variantName}" 
-                                placeholder="Select variant"
-                                showValueHelp="true" 
-                                change=".onCheckStep1"
+                            <Label text="Variant Name" />
+                            <Input
+                                value="{local>/variantName}"
+                                maxLength="14"
+                                placeholder="Select variant (max 14 chars)"
+                                showValueHelp="true"
                                 valueHelpRequest=".onVariantValueHelp"
-                                valueState="None"/>
+                            />
                         </f:content>
                     </f:SimpleForm>
                 </WizardStep>
-
-                <WizardStep id="Step2" title="Scheduling Options" validated="true"> 
+                <WizardStep
+                    id="Step2"
+                    title="Scheduling Options"
+                    validated="true"
+                >
                     <Toolbar>
-                        <ToolbarSpacer/>
-                        <Button text="Define Recurrence Pattern" press=".onOpenScheduleDialog" type="Ghost"/>
+                        <ToolbarSpacer />
+                        <Button
+                            text="Define Recurrence Pattern"
+                            press=".onOpenScheduleDialog"
+                            type="Ghost"
+                        />
                     </Toolbar>
-
-                    <f:SimpleForm editable="true" layout="ResponsiveGridLayout" 
-                            labelSpanXL="4" labelSpanL="4" labelSpanM="4" 
-                            adjustLabelSpan="false"
-                            emptySpanXL="0" emptySpanL="0" emptySpanM="0"
-                            columnsXL="2" columnsL="2" columnsM="2">
+                    <f:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="4"
+                        labelSpanL="4"
+                        labelSpanM="4"
+                        adjustLabelSpan="false"
+                        emptySpanXL="0"
+                        emptySpanL="0"
+                        emptySpanM="0"
+                        columnsXL="2"
+                        columnsL="2"
+                        columnsM="2"
+                    >
                         <f:content>
-                            <core:Title text="" /> 
-                            <Label text="Start Immediately"/>
-                            <CheckBox selected="{local>/startImmediately}" select="onCheckImmediate"/>
-                            
-                            <Label text="Job Start (Local Time)"/>
-                            <Text text="{
-                                path: 'local>/startDate',
-                                type: 'sap.ui.model.type.DateTime',
-                                formatOptions: { style: 'medium' }
-                            }" visible="{= ${local>/startImmediately}}"/>
-
-                            <Label text="Start"/>
-                            <DateTimePicker 
+                            <core:Title text="" />
+                            <Label text="Start Immediately" />
+                            <CheckBox
+                                selected="{local>/startImmediately}"
+                                select="onCheckImmediate"
+                            />
+                            <Label text="Job Start (Local Time)" />
+                            <Text
+                                text="{
+                                    path: 'local>/startDate',
+                                    type: 'sap.ui.model.type.DateTime',
+                                    formatOptions: {
+                                        style: 'medium'
+                                    }
+                                }"
+                                visible="{= ${local>/startImmediately}}"
+                            />
+                            <Label text="Start" />
+                            <DateTimePicker
                                 dateValue="{local>/startDate}"
                                 displayFormat="dd.MM.yyyy, HH:mm:ss"
-                                enabled="{= !${local>/startImmediately}}" 
+                                enabled="{= !${local>/startImmediately}}"
                                 visible="{= !${local>/startImmediately}}"
                                 valueState="{= (!${local>/startImmediately} &amp;&amp; !${local>/startDate}) ? 'Error' : 'None' }"
                                 valueStateText="Please select a start date and time."
                             />
-
-                            <core:Title text="" /> 
-                            <Label text="Recurrence Pattern"/>
-                            <Text text="{local>/recurrence}"/>
+                            <core:Title text="" />
+                            <Label text="Recurrence Pattern" />
+                            <Text text="{local>/recurrence}" />
                         </f:content>
                     </f:SimpleForm>
                 </WizardStep>
-
             </Wizard>
         </content>
-        
         <footer>
             <OverflowToolbar>
-                <ToolbarSpacer/>
-                <Button text="Cancel" press=".onNavBack"/>
+                <ToolbarSpacer />
+                <Button
+                    text="Cancel"
+                    press=".onNavBack"
+                />
             </OverflowToolbar>
         </footer>
     </Page>
