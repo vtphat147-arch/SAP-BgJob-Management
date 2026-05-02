@@ -23,6 +23,26 @@ sap.ui.define(
             onOpenManageMenu: function (oEvent) {
                 var oButton = oEvent.getSource();
                 var oActionSheet = this.byId("manageActionSheet");
+                
+                // Get selected contexts to dynamically enable/disable actions
+                var oTable = this.byId("Table");
+                var iSelectedCount = oTable ? oTable.getSelectedContexts().length : 0;
+                
+                // Nút Copy chỉ Enable khi user chọn ĐÚNG 1 dòng + UX Feedback
+                var oCopyBtn = this.byId("idCopyButton");
+                if (oCopyBtn) {
+                    var bIsCopyEnabled = (iSelectedCount === 1);
+                    oCopyBtn.setEnabled(bIsCopyEnabled);
+                    
+                    if (bIsCopyEnabled) {
+                        oCopyBtn.setText("📄 Copy");
+                        oCopyBtn.setTooltip("Copy selected job");
+                    } else {
+                        oCopyBtn.setText("📄 Copy (Select 1 Job)");
+                        oCopyBtn.setTooltip("Please select exactly ONE job to enable copying.");
+                    }
+                }
+
                 oActionSheet.openBy(oButton);
             },
 
