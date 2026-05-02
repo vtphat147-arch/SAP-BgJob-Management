@@ -112,11 +112,8 @@ sap.ui.define(
                     oModel.setProperty("/isImmediate", true);
                 }
 
-                var oDate = this.byId("idReleaseDate");
-                if (oDate) { oDate.setValue(""); oDate.setValueState("None"); }
-
-                var oTime = this.byId("idReleaseTime");
-                if (oTime) { oTime.setValue(""); oTime.setValueState("None"); }
+                var oDateTime = this.byId("idReleaseDateTime");
+                if (oDateTime) { oDateTime.setDateValue(null); oDateTime.setValue(""); oDateTime.setValueState("None"); }
 
                 var oTabBar = this.byId("idStartModeTabs");
                 if (oTabBar) { oTabBar.setSelectedKey("immediate"); }
@@ -127,6 +124,21 @@ sap.ui.define(
                 var oModel = this.getView().getModel("localRelease");
                 if (oModel) {
                     oModel.setProperty("/isImmediate", bSelected);
+                }
+                
+                // Clear errors on target change
+                if (bSelected) {
+                    var oDateTime = this.byId("idReleaseDateTime");
+                    if (oDateTime) {
+                        oDateTime.setValueState("None");
+                    }
+                }
+            },
+
+            onReleaseDateTimeChange: function (oEvent) {
+                var oControl = oEvent.getSource();
+                if (oControl.getDateValue()) {
+                    oControl.setValueState("None");
                 }
             },
 
@@ -147,9 +159,8 @@ sap.ui.define(
                 }
 
                 // --- 1. LẤY GIÁ TRỊ THÔ TỪ UI ---
-                var sRawDate = this.byId("idReleaseDate") ? this.byId("idReleaseDate").getValue() : "";     // "2026-03-18"
-                var sRawTime = this.byId("idReleaseTime") ? this.byId("idReleaseTime").getValue() : "";     // "05:00:00"
                 var bIsImmediate = this.byId("idImmedCheck") ? this.byId("idImmedCheck").getSelected() : false;
+                var oDateTimeControl = this.byId("idReleaseDateTime");
 
                 // --- 2. ĐỊNH DẠNG CHO CHUẨN ODATA V4 VÀ ĐỔI MÚI GIỜ (GIỐNG CREATE JOB) ---
                 var sSapDate = "";
@@ -158,9 +169,8 @@ sap.ui.define(
 
                 if (bIsImmediate) {
                     oDate = new Date(); // Lấy giờ hiện tại 
-                } else if (sRawDate && sRawTime) {
-                    // Chuyển chuỗi từ UI (local time ghép từ YYYY-MM-DD và HH:mm:ss) sang Date object
-                    oDate = new Date(sRawDate + "T" + sRawTime);
+                } else if (oDateTimeControl && oDateTimeControl.getDateValue()) {
+                    oDate = oDateTimeControl.getDateValue();
                 }
 
                 if (oDate && !isNaN(oDate.getTime())) {
@@ -181,8 +191,11 @@ sap.ui.define(
 
                 // --- 4. VALIDATE: Nếu không phải Immediate thì phải có Date và Time ---
                 if (!bIsImmediate) {
-                    if (!sSapDate || !sSapTime) {
-                        MessageToast.show("Please enter start date and start time.");
+                    if (!oDate) {
+                        if (oDateTimeControl) {
+                            oDateTimeControl.setValueState("Error");
+                            oDateTimeControl.setValueStateText("Please enter start date and time.");
+                        }
                         this._bConfirmInFlight = false;
                         return;
                     }
@@ -192,6 +205,10 @@ sap.ui.define(
                         var oNow = new Date();
                         oNow.setMinutes(oNow.getMinutes() - 1);
                         if (oDate < oNow) {
+                            if (oDateTimeControl) {
+                                oDateTimeControl.setValueState("Error");
+                                oDateTimeControl.setValueStateText("The scheduled date cannot be in the past.");
+                            }
                             MessageBox.error("The scheduled start date and time cannot be in the past.");
                             this._bConfirmInFlight = false;
                             return;
@@ -453,12 +470,22 @@ sap.ui.define(
             _syncCopyDialogState: function () {
                 var oInput = this.byId("copyJobNameInput");
                 var oDialog = this.byId("copyJobDialog");
-                var sValue = oInput ? (oInput.getValue() || "").trim() : "";
-                var bValid = !!sValue;
+                var sValue = oInput ? oInput.getValue() : "";
+                
+                var bValid = true;
+                var sErrorMsg = "";
+
+                if (!sValue || sValue.trim() === "") {
+                    bValid = false;
+                    sErrorMsg = "Job name is required.";
+                } else if (!/^[A-Z0-9_\/]+$/.test(sValue)) {
+                    bValid = false;
+                    sErrorMsg = "Only uppercase A-Z, numbers 0-9, '_' and '/' are allowed.";
+                }
 
                 if (oInput) {
                     oInput.setValueState(bValid ? "None" : "Error");
-                    oInput.setValueStateText("Job name is required.");
+                    oInput.setValueStateText(sErrorMsg);
                 }
 
                 if (oDialog && oDialog.getBeginButton()) {
