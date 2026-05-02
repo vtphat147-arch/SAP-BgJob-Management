@@ -88,6 +88,7 @@
                     press="onRepeatJob"
                 />
                 <Button
+                    id="idCopyButton"
                     text="📄 Copy"
                     press="onCopyWithRename"
                 />

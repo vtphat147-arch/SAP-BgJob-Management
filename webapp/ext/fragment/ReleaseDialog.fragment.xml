@@ -55,26 +55,15 @@
                                 columnsL="1"
                                 columnsM="1">
                                 <f:content>
-                                    <Label text="Scheduled Date" labelFor="idReleaseDate"
+                                    <Label text="Scheduled Start (Local Time)" labelFor="idReleaseDateTime"
                                         visible="{= !${localRelease>/isImmediate}}"
                                         required="{= !${localRelease>/isImmediate}}"/>
-                                    <DatePicker
-                                        id="idReleaseDate"
-                                        valueFormat="yyyy-MM-dd"
-                                        displayFormat="long"
+                                    <DateTimePicker
+                                        id="idReleaseDateTime"
+                                        displayFormat="dd.MM.yyyy, HH:mm:ss"
                                         width="100%"
-                                        placeholder="Select scheduled date"
-                                        visible="{= !${localRelease>/isImmediate}}"/>
-
-                                    <Label text="Scheduled Time" labelFor="idReleaseTime"
-                                        visible="{= !${localRelease>/isImmediate}}"
-                                        required="{= !${localRelease>/isImmediate}}"/>
-                                    <TimePicker
-                                        id="idReleaseTime"
-                                        valueFormat="HH:mm:ss"
-                                        displayFormat="medium"
-                                        width="100%"
-                                        placeholder="Select scheduled time"
+                                        placeholder="Select scheduled date and time"
+                                        change=".onReleaseDateTimeChange"
                                         visible="{= !${localRelease>/isImmediate}}"/>
                                 </f:content>
                             </f:SimpleForm>

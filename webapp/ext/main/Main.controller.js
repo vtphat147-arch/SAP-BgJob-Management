@@ -23,6 +23,26 @@ sap.ui.define(
             onOpenManageMenu: function (oEvent) {
                 var oButton = oEvent.getSource();
                 var oActionSheet = this.byId("manageActionSheet");
+                
+                // Get selected contexts to dynamically enable/disable actions
+                var oTable = this.byId("Table");
+                var iSelectedCount = oTable ? oTable.getSelectedContexts().length : 0;
+                
+                // Nút Copy chỉ Enable khi user chọn ĐÚNG 1 dòng + UX Feedback
+                var oCopyBtn = this.byId("idCopyButton");
+                if (oCopyBtn) {
+                    var bIsCopyEnabled = (iSelectedCount === 1);
+                    oCopyBtn.setEnabled(bIsCopyEnabled);
+                    
+                    if (bIsCopyEnabled) {
+                        oCopyBtn.setText("📄 Copy");
+                        oCopyBtn.setTooltip("Copy selected job");
+                    } else {
+                        oCopyBtn.setText("📄 Copy (Select 1 Job)");
+                        oCopyBtn.setTooltip("Please select exactly ONE job to enable copying.");
+                    }
+                }
+
                 oActionSheet.openBy(oButton);
             },
 
@@ -85,21 +105,18 @@ sap.ui.define(
                 var oModel = this.getView().getModel("localRelease");
                 if (!oModel) {
                     oModel = new sap.ui.model.json.JSONModel({
-                        isImmediate: false
+                        isImmediate: true
                     });
                     this.getView().setModel(oModel, "localRelease");
                 } else {
-                    oModel.setProperty("/isImmediate", false);
+                    oModel.setProperty("/isImmediate", true);
                 }
 
-                var oDate = this.byId("idReleaseDate");
-                if (oDate) { oDate.setValue(""); oDate.setValueState("None"); }
-
-                var oTime = this.byId("idReleaseTime");
-                if (oTime) { oTime.setValue(""); oTime.setValueState("None"); }
+                var oDateTime = this.byId("idReleaseDateTime");
+                if (oDateTime) { oDateTime.setDateValue(null); oDateTime.setValue(""); oDateTime.setValueState("None"); }
 
                 var oTabBar = this.byId("idStartModeTabs");
-                if (oTabBar) { oTabBar.setSelectedKey("scheduled"); }
+                if (oTabBar) { oTabBar.setSelectedKey("immediate"); }
             },
 
             onImmediateChange: function (oEvent) {
@@ -108,9 +125,24 @@ sap.ui.define(
                 if (oModel) {
                     oModel.setProperty("/isImmediate", bSelected);
                 }
+                
+                // Clear errors on target change
+                if (bSelected) {
+                    var oDateTime = this.byId("idReleaseDateTime");
+                    if (oDateTime) {
+                        oDateTime.setValueState("None");
+                    }
+                }
             },
 
-            onConfirmRelease: function () {
+            onReleaseDateTimeChange: function (oEvent) {
+                var oControl = oEvent.getSource();
+                if (oControl.getDateValue()) {
+                    oControl.setValueState("None");
+                }
+            },
+
+            onConfirmRelease: async function () {
                 var that = this;
 
                 if (this._bConfirmInFlight) {
@@ -127,9 +159,8 @@ sap.ui.define(
                 }
 
                 // --- 1. LẤY GIÁ TRỊ THÔ TỪ UI ---
-                var sRawDate = this.byId("idReleaseDate") ? this.byId("idReleaseDate").getValue() : "";     // "2026-03-18"
-                var sRawTime = this.byId("idReleaseTime") ? this.byId("idReleaseTime").getValue() : "";     // "05:00:00"
                 var bIsImmediate = this.byId("idImmedCheck") ? this.byId("idImmedCheck").getSelected() : false;
+                var oDateTimeControl = this.byId("idReleaseDateTime");
 
                 // --- 2. ĐỊNH DẠNG CHO CHUẨN ODATA V4 VÀ ĐỔI MÚI GIỜ (GIỐNG CREATE JOB) ---
                 var sSapDate = "";
@@ -138,9 +169,8 @@ sap.ui.define(
 
                 if (bIsImmediate) {
                     oDate = new Date(); // Lấy giờ hiện tại 
-                } else if (sRawDate && sRawTime) {
-                    // Chuyển chuỗi từ UI (local time ghép từ YYYY-MM-DD và HH:mm:ss) sang Date object
-                    oDate = new Date(sRawDate + "T" + sRawTime);
+                } else if (oDateTimeControl && oDateTimeControl.getDateValue()) {
+                    oDate = oDateTimeControl.getDateValue();
                 }
 
                 if (oDate && !isNaN(oDate.getTime())) {
@@ -161,8 +191,11 @@ sap.ui.define(
 
                 // --- 4. VALIDATE: Nếu không phải Immediate thì phải có Date và Time ---
                 if (!bIsImmediate) {
-                    if (!sSapDate || !sSapTime) {
-                        MessageToast.show("Please enter start date and start time.");
+                    if (!oDate) {
+                        if (oDateTimeControl) {
+                            oDateTimeControl.setValueState("Error");
+                            oDateTimeControl.setValueStateText("Please enter start date and time.");
+                        }
                         this._bConfirmInFlight = false;
                         return;
                     }
@@ -172,6 +205,10 @@ sap.ui.define(
                         var oNow = new Date();
                         oNow.setMinutes(oNow.getMinutes() - 1);
                         if (oDate < oNow) {
+                            if (oDateTimeControl) {
+                                oDateTimeControl.setValueState("Error");
+                                oDateTimeControl.setValueStateText("The scheduled date cannot be in the past.");
+                            }
                             MessageBox.error("The scheduled start date and time cannot be in the past.");
                             this._bConfirmInFlight = false;
                             return;
@@ -188,74 +225,44 @@ sap.ui.define(
                     { name: "EventParam", value: this.byId("idEventParam") ? this.byId("idEventParam").getValue() : "" }
                 ];
 
-                var oMessageModel = sap.ui.getCore().getMessageManager().getMessageModel();
-                var fnGetMessages = function () {
-                    if (!oMessageModel || typeof oMessageModel.getData !== "function") {
-                        return [];
-                    }
-                    var aMessages = oMessageModel.getData();
-                    return Array.isArray(aMessages) ? aMessages : [];
-                };
-                var iMessageCountBefore = fnGetMessages().length;
+                // Clear old messages before action
+                var oMessageManager = sap.ui.getCore().getMessageManager();
+                oMessageManager.removeAllMessages();
 
                 BusyIndicator.show(0);
 
-                // --- DÙNG EXTENSION API VỚI ACTION ĐỘNG TỪ this._sCurrentAction ---
-                var oExtensionAPI = this.getExtensionAPI();
                 var sCurrentAction = this._sCurrentAction || "com.sap.gateway.srvd.z_sd_job_ovp.v0001.ReleaseJob";
+                var sActionLabel = (sCurrentAction.indexOf("Repeat") !== -1) ? "Repeat Job" : "Release Job";
+                var aFailedMessages = [];
 
-                oExtensionAPI.editFlow.invokeAction(sCurrentAction, {
-                    contexts: aSelectedContexts,
-                    parameterValues: aParameterValues,
-                    skipParameterDialog: true
-                }).then(function () {
-                    BusyIndicator.hide();
+                // Execute action directly via OData V4 Model to capture exact execution errors
+                try {
+                    for (var oContext of aSelectedContexts) {
+                        var oActionContext = oContext.getModel().bindContext(sCurrentAction + "(...)", oContext);
+                        
+                        // Set parameters
+                        aParameterValues.forEach(function (oParam) {
+                            oActionContext.setParameter(oParam.name, oParam.value);
+                        });
 
-                    var aNewMessages = fnGetMessages().slice(iMessageCountBefore);
-                    var bHasNewError = aNewMessages.some(function (oMsg) {
-                        var sType = (oMsg && oMsg.type ? oMsg.type : "").toLowerCase();
-                        return sType === "error";
-                    });
-
-                    var bHasProviderError = aNewMessages.some(function (oMsg) {
-                        var sText = oMsg && oMsg.message ? oMsg.message : "";
-                        return /unspecified provider error occurred/i.test(sText);
-                    });
-
-                    if (bHasNewError || bHasProviderError) {
-                        console.warn("Action returned error messages, success toast suppressed.", aNewMessages);
-                        that._bConfirmInFlight = false;
-                        that._refreshTable();
-                        return;
+                        try {
+                            await oActionContext.execute();
+                        } catch (oError) {
+                            var sErr = oError?.error?.message || oError?.message || "Unknown error";
+                            aFailedMessages.push(sErr);
+                        }
                     }
+                } catch (e) {
+                    aFailedMessages.push(e.message || "Execution exception");
+                }
 
-                    // Read BE success message from Message Class
-                    var aSuccessMsgs = fnGetMessages().slice(iMessageCountBefore).filter(function (m) {
-                        return m.type === "Success";
-                    });
-                    if (aSuccessMsgs.length > 0) {
-                        MessageToast.show(aSuccessMsgs.map(function (m) { return m.message; }).join("\n"));
-                    } else {
-                        var sActionLabel = (sCurrentAction.indexOf("Repeat") !== -1) ? "Repeat Job" : "Release Job";
-                        MessageToast.show(sActionLabel + " completed successfully.");
-                    }
-                    that._bConfirmInFlight = false;
-                    that.onCloseReleaseDialog();
-                    that._refreshTable();
-                }).catch(function (oError) {
-                    BusyIndicator.hide();
-                    that._bConfirmInFlight = false;
-                    var sErrMsg = oError && oError.message ? oError.message : "Please try again.";
+                BusyIndicator.hide();
+                that._bConfirmInFlight = false;
 
-                    // Bỏ qua lỗi đồng bộ trạng thái action (metadata/cache) để tránh popup lỗi xám.
-                    if (sErrMsg.toLowerCase().includes("enabled")) {
-                        console.log("System state was refreshed.");
-                        return;
-                    }
+                var bIsSuccess = that._handleActionMessages(sActionLabel + " completed successfully.", aFailedMessages);
 
-                    console.error("Action error details:", oError);
-                    MessageBox.error("Execution failed: " + sErrMsg);
-                });
+                that.onCloseReleaseDialog();
+                that._refreshTable();
             },
 
             onCloseReleaseDialog: function () {
@@ -268,6 +275,60 @@ sap.ui.define(
                         oDialog.close();
                     }
                 }.bind(this));
+            },
+
+            // ==================== HELPER: Handle Action Response Messages ====================
+            _handleActionMessages: function (sFallbackSuccessMessage, aFallbackErrors) {
+                var oMessageManager = sap.ui.getCore().getMessageManager();
+                var aMessages = oMessageManager.getMessageModel().getData() || [];
+                
+                var aErrorMessages = (aFallbackErrors || []).slice(); // Add fallback errors from catch blocks
+                var aWarningMessages = [];
+                var aSuccessMessages = [];
+
+                // Categorize messages correctly by using lowerCase to avoid undefined enum dependencies
+                aMessages.forEach(function (oMsg) {
+                    var sType = (oMsg && oMsg.type ? oMsg.type : "").toLowerCase();
+                    var sMessage = oMsg.message || "Unknown error occurred";
+
+                    // Prevent duplicate errors if the MessageManager already caught the same error
+                    if (sType === "error" && !aErrorMessages.includes(sMessage)) {
+                        aErrorMessages.push(sMessage);
+                    } else if (sType === "warning") {
+                        aWarningMessages.push(sMessage);
+                    } else if (sType === "success") {
+                        aSuccessMessages.push(sMessage);
+                    }
+                });
+
+                // 1. FULL FAILURE: If only errors occurred (or errors + warnings but no success)
+                if (aErrorMessages.length > 0 && aSuccessMessages.length === 0) {
+                    // Extract unique error messages to avoid long repeating popups
+                    var aUniqueErrors = [...new Set(aErrorMessages)];
+                    MessageBox.error(aUniqueErrors.join("\n\n"));
+                    return false; // Indicate failure
+                }
+
+                // 2. PARTIAL SUCCESS: Both Success and Errors exist
+                if (aErrorMessages.length > 0 && aSuccessMessages.length > 0) {
+                    var aUniqueErrors = [...new Set(aErrorMessages)];
+                    var aUniqueSuccess = [...new Set(aSuccessMessages)];
+                    var sPartialMsg = "Warning: Some operations failed.\n\n" + 
+                                      "Errors:\n" + aUniqueErrors.map(function(m){ return "• " + m; }).join("\n") + "\n\n" +
+                                      "Successes:\n" + aUniqueSuccess.map(function(m){ return "• " + m; }).join("\n");
+                    MessageBox.warning(sPartialMsg);
+                    return true; 
+                }
+
+                // 3. FULL SUCCESS
+                if (aSuccessMessages.length > 0) {
+                    var aUniqueSuccess = [...new Set(aSuccessMessages)];
+                    MessageToast.show(aUniqueSuccess.join("\n"));
+                } else {
+                    MessageToast.show(sFallbackSuccessMessage);
+                }
+                
+                return true;
             },
 
             // ==================== HELPER: Gọi Bound Action cho nhiều dòng ====================
@@ -390,12 +451,22 @@ sap.ui.define(
             _syncCopyDialogState: function () {
                 var oInput = this.byId("copyJobNameInput");
                 var oDialog = this.byId("copyJobDialog");
-                var sValue = oInput ? (oInput.getValue() || "").trim() : "";
-                var bValid = !!sValue;
+                var sValue = oInput ? oInput.getValue() : "";
+                
+                var bValid = true;
+                var sErrorMsg = "";
+
+                if (!sValue || sValue.trim() === "") {
+                    bValid = false;
+                    sErrorMsg = "Job name is required.";
+                } else if (!/^[A-Z0-9_\/]+$/.test(sValue)) {
+                    bValid = false;
+                    sErrorMsg = "Only uppercase A-Z, numbers 0-9, '_' and '/' are allowed.";
+                }
 
                 if (oInput) {
                     oInput.setValueState(bValid ? "None" : "Error");
-                    oInput.setValueStateText("Job name is required.");
+                    oInput.setValueStateText(sErrorMsg);
                 }
 
                 if (oDialog && oDialog.getBeginButton()) {
@@ -407,7 +478,7 @@ sap.ui.define(
                 this._syncCopyDialogState();
             },
 
-            onConfirmCopyJob: function () {
+            onConfirmCopyJob: async function () {
                 var oInput = this.byId("copyJobNameInput");
                 var sNewJobName = oInput ? (oInput.getValue() || "").trim() : "";
                 var oContext = this._oCopySourceContext;
@@ -423,37 +494,40 @@ sap.ui.define(
                 }
 
                 var that = this;
-                var oExtensionAPI = this.getExtensionAPI();
                 var sActionName = "com.sap.gateway.srvd.z_sd_job_ovp.v0001.CopyJob";
+
+                // Clear old messages before action
+                var oMessageManager = sap.ui.getCore().getMessageManager();
+                oMessageManager.removeAllMessages();
 
                 BusyIndicator.show(0);
 
-                oExtensionAPI.editFlow.invokeAction(sActionName, {
-                    contexts: [oContext],
-                    parameterValues: [
-                        { name: "NewJobName", value: sNewJobName }
-                    ],
-                    skipParameterDialog: true
-                }).then(function () {
-                    BusyIndicator.hide();
-                    // Read BE success message from Message Class
-                    var oMsgMgr = sap.ui.getCore().getMessageManager();
-                    var aMsgs = (oMsgMgr.getMessageModel().getData() || []).filter(function (m) { return m.type === "Success"; });
-                    if (aMsgs.length > 0) {
-                        MessageToast.show(aMsgs.map(function (m) { return m.message; }).join("\n"));
-                    } else {
-                        MessageToast.show("Copy and Rename completed successfully.");
+                var aFailedMessages = [];
+
+                try {
+                    // Try executing native OData V4 Action
+                    var oActionContext = oContext.getModel().bindContext(sActionName + "(...)", oContext);
+                    oActionContext.setParameter("NewJobName", sNewJobName);
+
+                    await oActionContext.execute();
+                } catch (oError) {
+                    // HTTP 400 Bad Request execution error will be caught here correctly
+                    var sErr = oError?.error?.message || oError?.message || "Unknown error";
+                    // Avoid catching user-cancellations (if any)
+                    if (sErr.indexOf("cancelled") === -1) {
+                        aFailedMessages.push(sErr);
                     }
-                    that.onCloseCopyDialog();
+                }
+
+                BusyIndicator.hide();
+                
+                var bIsSuccess = that._handleActionMessages("Copy and Rename completed successfully.", aFailedMessages);
+                
+                that.onCloseCopyDialog();
+                if (bIsSuccess) {
                     that._clearStartDateFilter();
-                    that._refreshTable();
-                }).catch(function (err) {
-                    BusyIndicator.hide();
-                    console.error("Copy Job error:", err);
-                    if (!err || !err.message || err.message.indexOf("cancelled") === -1) {
-                        MessageBox.error("Copy Job failed: " + (err.message || "Please try again."));
-                    }
-                });
+                }
+                that._refreshTable();
             },
 
             onCloseCopyDialog: function () {
