@@ -459,9 +459,6 @@ sap.ui.define(
                 if (!sValue || sValue.trim() === "") {
                     bValid = false;
                     sErrorMsg = "Job name is required.";
-                } else if (!/^[A-Z0-9_\/]+$/.test(sValue)) {
-                    bValid = false;
-                    sErrorMsg = "Only uppercase A-Z, numbers 0-9, '_' and '/' are allowed.";
                 }
 
                 if (oInput) {
