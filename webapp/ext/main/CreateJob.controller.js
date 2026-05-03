@@ -75,24 +75,21 @@ sap.ui.define([
         },
 
         // ========== HELPER: Mở Value Help Dialog (Dùng chung cho Program & Variant) ==========
-        _openValueHelp: function (sDialogKey, sFragmentName, aInitialFilters) {
+        _openValueHelp: async function (sDialogKey, sFragmentName, aInitialFilters) {
             var oView = this.getView();
-
-            if (!this["_p" + sDialogKey]) {
-                this["_p" + sDialogKey] = Fragment.load({
+            // 1. Nếu Dialog chưa được tạo, thì Load nó lên và lưu vào biến
+            if (!this[sDialogKey]) {
+                this[sDialogKey] = await Fragment.load({
                     id: oView.getId(),
                     name: "project5.ext.fragment." + sFragmentName,
                     controller: this
-                }).then(function (oDialog) {
-                    oView.addDependent(oDialog);
-                    return oDialog;
                 });
+                oView.addDependent(this[sDialogKey]);  // Cho phép Dialog xài chung dữ liệu với View
             }
-
-            this["_p" + sDialogKey].then(function (oDialog) {
-                oDialog.getBinding("items").filter(aInitialFilters || []);
-                oDialog.open();
-            });
+            // 2. Lấy cái Dialog ra xài: áp filter và Mở lên
+            var oDialog = this[sDialogKey];
+            oDialog.getBinding("items").filter(aInitialFilters || []);
+            oDialog.open();
         },
 
         // ========== PROGRAM VALUE HELP ==========
@@ -174,76 +171,54 @@ sap.ui.define([
             }
         },
 
-        onWizardCompleted: function () {
+        onWizardCompleted: async function () {
             var oView = this.getView();
             var oLocalData = oView.getModel("local").getData();
             var oODataModel = oView.getModel();
-            var that = this;
 
             oView.setBusy(true);
 
             try {
-                // 1. Convert date → SAP server timezone (Europe/Berlin, auto DST)
+                // 1. Chuyển đổi Ngày Giờ sang múi giờ Berlin (SAP Server)
                 var oDate = oLocalData.startDate ? new Date(oLocalData.startDate) : new Date();
-                if (isNaN(oDate.getTime())) { oDate = new Date(); }
-
+                if (isNaN(oDate.getTime())) oDate = new Date();
+                
                 var oParts = {};
-                new Intl.DateTimeFormat('en-CA', {
-                    timeZone: 'Europe/Berlin',
-                    year: 'numeric', month: '2-digit', day: '2-digit',
-                    hour: '2-digit', minute: '2-digit', second: '2-digit',
-                    hour12: false
-                }).formatToParts(oDate).forEach(function (p) { oParts[p.type] = p.value; });
+                new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin', hour12: false, 
+                    year: 'numeric', month: '2-digit', day: '2-digit', 
+                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                }).formatToParts(oDate).forEach(p => oParts[p.type] = p.value);
 
-                var sStartDate = oParts.year + "-" + oParts.month + "-" + oParts.day;
-                var sStartTime = oParts.hour + ":" + oParts.minute + ":" + oParts.second;
-
-                // 2. Frequency mapping (recurrence → SAP FrequencyType)
+                // 2. Map Tần suất (Frequency) sang Format Backend
                 var mFreqMap = { "Minutes": "MINUTES", "Hourly": "HOURLY", "Daily": "DAILY", "Weekly": "WEEKLY", "Monthly": "MONTHLY" };
-                var sRecurrence = oLocalData.recurrence || "Single Run";
-                var sFreqType = mFreqMap[sRecurrence] || "";
-                var iFreqValue = sFreqType ? (parseInt(oLocalData.frequency) || 1) : 0;
+                var sFreqType = mFreqMap[oLocalData.recurrence] || "";
 
-                // 3. Build & execute OData action
-                var oAction = oODataModel.bindContext(
-                    "/JobList/com.sap.gateway.srvd.z_sd_job_ovp.v0001.ScheduleJob(...)"
-                );
-
+                // 3. Chuẩn bị và Gắn tham số cho OData Action
+                var oAction = oODataModel.bindContext("/JobList/com.sap.gateway.srvd.z_sd_job_ovp.v0001.ScheduleJob(...)");
                 oAction.setParameter("JobName", oLocalData.jobName || "New Job");
                 oAction.setParameter("ProgramName", oLocalData.programName);
                 oAction.setParameter("VariantName", oLocalData.variantName || "");
                 oAction.setParameter("IsImmediate", oLocalData.startImmediately ? "X" : "");
-                oAction.setParameter("StartDate", sStartDate);
-                oAction.setParameter("StartTime", sStartTime);
+                oAction.setParameter("StartDate", `${oParts.year}-${oParts.month}-${oParts.day}`);
+                oAction.setParameter("StartTime", `${oParts.hour}:${oParts.minute}:${oParts.second}`);
                 oAction.setParameter("FrequencyType", sFreqType);
-                oAction.setParameter("FrequencyValue", iFreqValue);
+                oAction.setParameter("FrequencyValue", sFreqType ? (parseInt(oLocalData.frequency) || 1) : 0);
 
-                oAction.execute().then(function () {
-                    // Read success message from BE (msg 004/005 from ZCM_BC_BJSMS_MSG)
-                    var aMessages = sap.ui.getCore().getMessageManager().getMessageModel().getData();
-                    var sMsg = "Job created successfully!"; // Fallback
-                    for (var i = aMessages.length - 1; i >= 0; i--) {
-                        if (aMessages[i].type === "Success") {
-                            sMsg = aMessages[i].message;
-                            break;
-                        }
-                    }
-                    MessageToast.show(sMsg);
-                    that.onNavBack();
+                // 4. Bắn Action xuống Backend và Đợi
+                await oAction.execute(); 
 
-                }).catch(function (oError) {
-                    console.error("Job Creation Failed:", oError);
-                    var sMsg = (oError.error && oError.error.message) || oError.message || "Unknown error";
-                    MessageBox.error("Failed to schedule job.\n\n" + sMsg);
+                // 5. Đọc thông báo thành công và Quay về
+                var aMessages = sap.ui.getCore().getMessageManager().getMessageModel().getData();
+                var oSuccessMsg = aMessages.slice().reverse().find(m => m.type === "Success");
+                
+                MessageToast.show(oSuccessMsg ? oSuccessMsg.message : "Job created successfully!");
+                this.onNavBack();
 
-                }).finally(function () {
-                    oView.setBusy(false);
-                });
-
-            } catch (oEx) {
-                console.error("Client Error:", oEx);
+            } catch (oError) {
+                var sMsg = (oError.error && oError.error.message) || oError.message || "Unknown error";
+                MessageBox.error("Failed to schedule job.\n\n" + sMsg);
+            } finally {
                 oView.setBusy(false);
-                MessageBox.error("Client error: " + oEx.message);
             }
         },
 
