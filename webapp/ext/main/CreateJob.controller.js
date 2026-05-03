@@ -25,31 +25,38 @@ sap.ui.define([
             this.getView().setModel(oModel, "local");
         },
 
-        onMarkTouched: function () {
+        // onMarkTouched: function (oEvent) {
+        //     this.getView().getModel("local").setProperty("/touched", true);
+        //     // 2. Thêm logic: Ép chữ hoa & Xóa ký tự đặc biệt
+        //     if (oEvent) {
+        //         var oInput = oEvent.getSource();
+        //         var sValue = oInput.getValue();
+
+        //         // Regex: Chỉ giữ lại A-Z, 0-9 và dấu gạch dưới "_"
+        //         var sFormatted = sValue.toUpperCase().replace(/[^A-Z0-9_]/g, "");
+
+        //         if (sValue !== sFormatted) {
+        //             // Cập nhật giá trị hiển thị trên ô Input
+        //             oInput.setValue(sFormatted);
+
+        //             // Cập nhật luôn giá trị vào Data Model để Backend nhận được chuẩn
+        //             var oBinding = oInput.getBinding("value");
+        //             if (oBinding) {
+        //                 var sPath = oBinding.getPath(); // Lấy đường dẫn (ví dụ: /jobName hoặc /programName)
+        //                 this.getView().getModel("local").setProperty(sPath, sFormatted);
+        //             }
+        //         }
+        //     }
+
+        // },
+        onMarkTouched: function (oEvent) {
+            const oInput = oEvent.getSource();
+            const sFormatted = oInput.getValue().toUpperCase();            // replace(/[^A-Z0-9_]/g, "");
+            oInput.setValue(sFormatted);
+            oInput.getBinding("value").getModel().setProperty(oInput.getBinding("value").getPath(), sFormatted);
+
             this.getView().getModel("local").setProperty("/touched", true);
-            // 2. Thêm logic: Ép chữ hoa & Xóa ký tự đặc biệt
-            if (oEvent) {
-                var oInput = oEvent.getSource();
-                var sValue = oInput.getValue();
-
-                // Regex: Chỉ giữ lại A-Z, 0-9 và dấu gạch dưới "_"
-                var sFormatted = sValue.toUpperCase().replace(/[^A-Z0-9_]/g, "");
-
-                if (sValue !== sFormatted) {
-                    // Cập nhật giá trị hiển thị trên ô Input
-                    oInput.setValue(sFormatted);
-
-                    // Cập nhật luôn giá trị vào Data Model để Backend nhận được chuẩn
-                    var oBinding = oInput.getBinding("value");
-                    if (oBinding) {
-                        var sPath = oBinding.getPath(); // Lấy đường dẫn (ví dụ: /jobName hoặc /programName)
-                        this.getView().getModel("local").setProperty(sPath, sFormatted);
-                    }
-                }
-            }
-
         },
-
         onOpenScheduleDialog: function () {
             var oView = this.getView();
 
