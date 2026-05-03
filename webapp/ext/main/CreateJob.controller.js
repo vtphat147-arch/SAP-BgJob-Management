@@ -27,6 +27,27 @@ sap.ui.define([
 
         onMarkTouched: function () {
             this.getView().getModel("local").setProperty("/touched", true);
+            // 2. Thêm logic: Ép chữ hoa & Xóa ký tự đặc biệt
+            if (oEvent) {
+                var oInput = oEvent.getSource();
+                var sValue = oInput.getValue();
+
+                // Regex: Chỉ giữ lại A-Z, 0-9 và dấu gạch dưới "_"
+                var sFormatted = sValue.toUpperCase().replace(/[^A-Z0-9_]/g, "");
+
+                if (sValue !== sFormatted) {
+                    // Cập nhật giá trị hiển thị trên ô Input
+                    oInput.setValue(sFormatted);
+
+                    // Cập nhật luôn giá trị vào Data Model để Backend nhận được chuẩn
+                    var oBinding = oInput.getBinding("value");
+                    if (oBinding) {
+                        var sPath = oBinding.getPath(); // Lấy đường dẫn (ví dụ: /jobName hoặc /programName)
+                        this.getView().getModel("local").setProperty(sPath, sFormatted);
+                    }
+                }
+            }
+
         },
 
         onOpenScheduleDialog: function () {
@@ -182,10 +203,11 @@ sap.ui.define([
                 // 1. Chuyển đổi Ngày Giờ sang múi giờ Berlin (SAP Server)
                 var oDate = oLocalData.startDate ? new Date(oLocalData.startDate) : new Date();
                 if (isNaN(oDate.getTime())) oDate = new Date();
-                
+
                 var oParts = {};
-                new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin', hour12: false, 
-                    year: 'numeric', month: '2-digit', day: '2-digit', 
+                new Intl.DateTimeFormat('en-CA', {
+                    timeZone: 'Europe/Berlin', hour12: false,
+                    year: 'numeric', month: '2-digit', day: '2-digit',
                     hour: '2-digit', minute: '2-digit', second: '2-digit'
                 }).formatToParts(oDate).forEach(p => oParts[p.type] = p.value);
 
@@ -195,7 +217,7 @@ sap.ui.define([
 
                 // 3. Chuẩn bị và Gắn tham số cho OData Action
                 var oAction = oODataModel.bindContext("/JobList/com.sap.gateway.srvd.z_sd_job_ovp.v0001.ScheduleJob(...)");
-                oAction.setParameter("JobName", oLocalData.jobName || "New Job");
+                oAction.setParameter("JobName", (oLocalData.jobName || "New Job").toUpperCase());
                 oAction.setParameter("ProgramName", oLocalData.programName);
                 oAction.setParameter("VariantName", oLocalData.variantName || "");
                 oAction.setParameter("IsImmediate", oLocalData.startImmediately ? "X" : "");
@@ -205,12 +227,12 @@ sap.ui.define([
                 oAction.setParameter("FrequencyValue", sFreqType ? (parseInt(oLocalData.frequency) || 1) : 0);
 
                 // 4. Bắn Action xuống Backend và Đợi
-                await oAction.execute(); 
+                await oAction.execute();
 
                 // 5. Đọc thông báo thành công và Quay về
                 var aMessages = sap.ui.getCore().getMessageManager().getMessageModel().getData();
                 var oSuccessMsg = aMessages.slice().reverse().find(m => m.type === "Success");
-                
+
                 MessageToast.show(oSuccessMsg ? oSuccessMsg.message : "Job created successfully!");
                 this.onNavBack();
 

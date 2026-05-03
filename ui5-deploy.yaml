@@ -21,6 +21,6 @@ builder:
           name: ZJOBF0701
           description: Background Job Management draft
           package: ZSP26_GSP07_DEVELOPMENT
-          transport: S40K917560
+          transport: S40K918023
         exclude:
           - /test/
