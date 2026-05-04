@@ -35,10 +35,10 @@ sap.ui.define(
                     oCopyBtn.setEnabled(bIsCopyEnabled);
 
                     if (bIsCopyEnabled) {
-                        oCopyBtn.setText("📄 Copy");
+                        oCopyBtn.setText(" Copy");
                         oCopyBtn.setTooltip("Copy selected job");
                     } else {
-                        oCopyBtn.setText("📄 Copy (Select 1 Job)");
+                        oCopyBtn.setText(" Copy (Select 1 Job)");
                         oCopyBtn.setTooltip("Please select exactly ONE job to enable copying.");
                     }
                 }
@@ -105,15 +105,22 @@ sap.ui.define(
                 var oModel = this.getView().getModel("localRelease");
                 if (!oModel) {
                     oModel = new sap.ui.model.json.JSONModel({
-                        isImmediate: true
+                        isImmediate: true,
+                        recurrence: "Single Run",
+                        frequency: 1
                     });
                     this.getView().setModel(oModel, "localRelease");
                 } else {
                     oModel.setProperty("/isImmediate", true);
+                    oModel.setProperty("/recurrence", "Single Run");
+                    oModel.setProperty("/frequency", 1);
                 }
 
                 var oDateTime = this.byId("idReleaseDateTime");
                 if (oDateTime) { oDateTime.setDateValue(null); oDateTime.setValue(""); oDateTime.setValueState("None"); }
+
+                var oFreqInput = this.byId("idFrequencyInput");
+                if (oFreqInput) { oFreqInput.setValueState("None"); }
 
                 var oTabBar = this.byId("idStartModeTabs");
                 if (oTabBar) { oTabBar.setSelectedKey("immediate"); }
@@ -131,6 +138,31 @@ sap.ui.define(
                     var oDateTime = this.byId("idReleaseDateTime");
                     if (oDateTime) {
                         oDateTime.setValueState("None");
+                    }
+                }
+            },
+
+            onFrequencyChange: function (oEvent) {
+                var oInput = oEvent.getSource();
+                var sValue = oInput.getValue().trim();
+
+                // Trường hợp trống hoặc <= 0
+                if (!sValue || parseInt(sValue, 10) <= 0) {
+                    oInput.setValueState("Error");
+                    oInput.setValueStateText("Frequency value must be greater than 0");
+                }
+                // Có chứa ký tự chữ cái, đặc biệt hoặc định dạng số thập phân, số âm...
+                else if (!/^[1-9]\d*$/.test(sValue)) {
+                    oInput.setValueState("Error");
+                    oInput.setValueStateText("Invalid range for selected recurrence pattern");
+                }
+                else {
+                    oInput.setValueState("None");
+
+                    // Cập nhật lại giá trị chuẩn vào model
+                    var oBinding = oInput.getBinding("value");
+                    if (oBinding) {
+                        oBinding.getModel().setProperty(oBinding.getPath(), sValue);
                     }
                 }
             },
@@ -189,7 +221,32 @@ sap.ui.define(
                     sSapTime = oParts.hour + ":" + oParts.minute + ":" + oParts.second;
                 }
 
-                // --- 4. VALIDATE: Nếu không phải Immediate thì phải có Date và Time ---
+                // --- 4. VALIDATE: Frequency & DateTime ---
+                var oLocalData = this.getView().getModel("localRelease").getData();
+
+                // a. Nếu chọn lặp lại mà để tần suất trống, báo lỗi
+                if (oLocalData.recurrence !== "Single Run") {
+                    var sFreqValStr = String(oLocalData.frequency || "").trim();
+                    var oFreqInput = this.byId("idFrequencyInput");
+
+                    if (!sFreqValStr || parseInt(sFreqValStr, 10) <= 0) {
+                        if (oFreqInput) {
+                            oFreqInput.setValueState("Error");
+                            oFreqInput.setValueStateText("Frequency value must be greater than 0");
+                        }
+                        this._bConfirmInFlight = false;
+                        return;
+                    } else if (!/^[1-9]\d*$/.test(sFreqValStr)) {
+                        if (oFreqInput) {
+                            oFreqInput.setValueState("Error");
+                            oFreqInput.setValueStateText("Invalid range for selected recurrence pattern");
+                        }
+                        this._bConfirmInFlight = false;
+                        return;
+                    }
+                }
+
+                // b. Nếu không phải Immediate thì phải có Date và Time
                 if (!bIsImmediate) {
                     if (!oDate) {
                         if (oDateTimeControl) {
@@ -207,19 +264,27 @@ sap.ui.define(
                         if (oDate < oNow) {
                             if (oDateTimeControl) {
                                 oDateTimeControl.setValueState("Error");
-                                oDateTimeControl.setValueStateText("The scheduled date cannot be in the past.");
+                                oDateTimeControl.setValueStateText("Start time must be in the future");
                             }
-                            MessageBox.error("The scheduled start date and time cannot be in the past.");
+                            MessageBox.error("Start time must be in the future");
                             this._bConfirmInFlight = false;
                             return;
                         }
                     }
                 }
 
+                // --- 5. LẤY THÔNG TIN FREQUENCY TỪ MODEL ---
+                var oLocalData = this.getView().getModel("localRelease").getData();
+                var mFreqMap = { "Minutes": "MINUTES", "Hourly": "HOURLY", "Daily": "DAILY", "Weekly": "WEEKLY", "Monthly": "MONTHLY" };
+                var sFreqType = mFreqMap[oLocalData.recurrence] || "";
+                var iFreqValue = sFreqType ? Math.max(1, parseInt(oLocalData.frequency, 10) || 1) : 0;
+
                 var aParameterValues = [
                     { name: "IsImmediate", value: bIsImmediate },
                     { name: "StartDate", value: sSapDate },
                     { name: "StartTime", value: sSapTime },
+                    { name: "FrequencyType", value: sFreqType },
+                    { name: "FrequencyValue", value: iFreqValue },
                     { name: "AfterJobName", value: this.byId("idAfterJobName") ? this.byId("idAfterJobName").getValue() : "" },
                     { name: "EventID", value: this.byId("idEventID") ? this.byId("idEventID").getValue() : "" },
                     { name: "EventParam", value: this.byId("idEventParam") ? this.byId("idEventParam").getValue() : "" }
@@ -669,7 +734,7 @@ sap.ui.define(
                     sCurrentUser = sap.ushell.Container.getService("UserInfo").getId();
                 }
                 if (!sCurrentUser) {
-                    MessageToast.show("Không lấy được ID người dùng.");
+                    MessageToast.show("Can't get current user.");
                     return;
                 }
                 var oFilterBar = this.byId("FilterBar").getContent();
@@ -678,7 +743,7 @@ sap.ui.define(
                 });
                 oFilterBar.triggerSearch();
 
-                MessageToast.show("Đã lọc theo: " + sCurrentUser);
+                MessageToast.show("Filtered by user: " + sCurrentUser);
             },
             // --- THÊM HÀM NÀY ĐỂ ĐIỀU HƯỚNG SANG TRANG DETAIL (GIỐNG SM37) ---
             onRowPress: function (oEvent) {

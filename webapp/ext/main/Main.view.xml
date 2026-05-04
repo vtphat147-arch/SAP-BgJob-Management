@@ -42,29 +42,34 @@
             >
                 <macros:actions>
                     <Button
-                        text="🔄 Refresh"
+                        text="Refresh"
+                        icon="sap-icon://refresh"
                         type="Transparent"
                         press="onRefreshTable"
                     />
                     <Button
                         id="btnManage"
-                        text="⚙️ Manage"
+                        text="Manage"
+                        icon="sap-icon://action-settings"
                         type="Default"
                         press="onOpenManageMenu"
                     />
                     <Button
-                        text="👤 My Jobs"
+                        text="My Jobs"
+                        icon="sap-icon://employee"
                         type="Emphasized"
                         press="onFilterOwnJobs"
                     />
                     <Button
-                        text="📅 Schedule"
+                        text="Schedule"
+                        icon="sap-icon://date-time"
                         type="Success"
                         press="onCreateJob"
                     />
                     <Button
                         id="btnAnalytics"
-                        text="🔗 Quick Link"
+                        text="Quick Link"
+                        icon="sap-icon://chain-link"
                         type="Transparent"
                         press="onOpenAnalyticsMenu"
                     />
@@ -80,25 +85,30 @@
         >
             <buttons>
                 <Button
-                    text="▶️ Release"
+                    text="Release"
+                    icon="sap-icon://unlocked"
                     press="onReleaseJob"
                 />
                 <Button
-                    text="🔁 Repeat"
+                    text="Repeat"
+                    icon="sap-icon://synchronize"
                     press="onRepeatJob"
                 />
                 <Button
                     id="idCopyButton"
-                    text="📄 Copy"
+                    text="Copy"
+                    icon="sap-icon://copy"
                     press="onCopyWithRename"
                 />
                 <Button
-                    text="⏹️ Stop"
+                    text="Stop"
+                    icon="sap-icon://stop"
                     type="Attention"
                     press="onStopJob"
                 />
                 <Button
-                    text="🗑️ Delete"
+                    text="Delete"
+                    icon="sap-icon://delete"
                     type="Reject"
                     press="onDeleteJob"
                 />
@@ -110,11 +120,13 @@
         >
             <buttons>
                 <Button
-                    text="📈 Dashboard"
+                    text="Dashboard"
+                    icon="sap-icon://barchart"
                     press="onOpenDashboard"
                 />
                 <Button
-                    text="🔍 Analyze"
+                    text="Analyze"
+                    icon="sap-icon://measure"
                     press="onOpenAnalytics"
                 />
             </buttons>

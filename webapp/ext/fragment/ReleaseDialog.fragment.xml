@@ -25,8 +25,8 @@
                                 selected="{localRelease>/isImmediate}"
                                 select="onImmediateChange"/>
                             <MessageStrip
-                                text="The job will be released and started immediately after you confirm."
-                                type="Success"
+                                text="{= ${localRelease>/recurrence} !== 'Single Run' ? 'Job sẽ chạy ngay lập tức và lặp lại theo chu kỳ đã chọn' : 'The job will be released and started immediately after you confirm.'}"
+                                type="{= ${localRelease>/recurrence} !== 'Single Run' ? 'Warning' : 'Success'}"
                                 showIcon="true"
                                 showCloseButton="false"
                                 visible="{localRelease>/isImmediate}"
@@ -79,6 +79,56 @@
                     </IconTabFilter>
                 </items>
             </IconTabBar>
+
+            <f:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                class="sapUiNoMarginTop"
+                labelSpanXL="4"
+                labelSpanL="4"
+                labelSpanM="4"
+                labelSpanS="12"
+                adjustLabelSpan="false"
+                emptySpanXL="1"
+                emptySpanL="1"
+                emptySpanM="0"
+                emptySpanS="0"
+                columnsXL="1"
+                columnsL="1"
+                columnsM="1">
+                <f:content>
+                    <core:Title text="Recurrence Settings" />
+                    <Label text="Recurrence Pattern" />
+                    <Select selectedKey="{localRelease>/recurrence}">
+                        <items>
+                            <core:Item key="Single Run" text="Single Run"/>
+                            <core:Item key="Minutes" text="Minutes"/>
+                            <core:Item key="Hourly" text="Hourly"/>
+                            <core:Item key="Daily" text="Daily"/>
+                            <core:Item key="Weekly" text="Weekly"/>
+                            <core:Item key="Monthly" text="Monthly"/>
+                        </items>
+                    </Select>
+
+                    <Label text="Every" visible="{= ${localRelease>/recurrence} !== 'Single Run'}"/>
+                    <HBox visible="{= ${localRelease>/recurrence} !== 'Single Run'}" alignItems="Center">
+                        <Input 
+                            id="idFrequencyInput"
+                            value="{localRelease>/frequency}" 
+                            type="Text" 
+                            width="5rem" 
+                            textAlign="End"
+                            change=".onFrequencyChange"
+                            class="sapUiTinyMarginEnd" />
+                        <Text text="{= 
+                            ${localRelease>/recurrence} === 'Minutes' ? 'Minute(s)' : 
+                            ${localRelease>/recurrence} === 'Hourly' ? 'Hour(s)' : 
+                            ${localRelease>/recurrence} === 'Daily' ? 'Day(s)' : 
+                            ${localRelease>/recurrence} === 'Weekly' ? 'Week(s)' : 'Month(s)' 
+                        }"/>
+                    </HBox>
+                </f:content>
+            </f:SimpleForm>
         </content>
         <beginButton>
             <Button text="Confirm Release" type="Emphasized" icon="sap-icon://accept" press="onConfirmRelease"/>
