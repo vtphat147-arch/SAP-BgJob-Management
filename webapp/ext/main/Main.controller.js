@@ -35,10 +35,10 @@ sap.ui.define(
                     oCopyBtn.setEnabled(bIsCopyEnabled);
                     
                     if (bIsCopyEnabled) {
-                        oCopyBtn.setText("📄 Copy");
+                        oCopyBtn.setText(" Copy");
                         oCopyBtn.setTooltip("Copy selected job");
                     } else {
-                        oCopyBtn.setText("📄 Copy (Select 1 Job)");
+                        oCopyBtn.setText(" Copy (Select 1 Job)");
                         oCopyBtn.setTooltip("Please select exactly ONE job to enable copying.");
                     }
                 }
