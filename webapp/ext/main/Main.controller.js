@@ -23,17 +23,17 @@ sap.ui.define(
             onOpenManageMenu: function (oEvent) {
                 var oButton = oEvent.getSource();
                 var oActionSheet = this.byId("manageActionSheet");
-                
+
                 // Get selected contexts to dynamically enable/disable actions
                 var oTable = this.byId("Table");
                 var iSelectedCount = oTable ? oTable.getSelectedContexts().length : 0;
-                
+
                 // Nút Copy chỉ Enable khi user chọn ĐÚNG 1 dòng + UX Feedback
                 var oCopyBtn = this.byId("idCopyButton");
                 if (oCopyBtn) {
                     var bIsCopyEnabled = (iSelectedCount === 1);
                     oCopyBtn.setEnabled(bIsCopyEnabled);
-                    
+
                     if (bIsCopyEnabled) {
                         oCopyBtn.setText("📄 Copy");
                         oCopyBtn.setTooltip("Copy selected job");
@@ -125,7 +125,7 @@ sap.ui.define(
                 if (oModel) {
                     oModel.setProperty("/isImmediate", bSelected);
                 }
-                
+
                 // Clear errors on target change
                 if (bSelected) {
                     var oDateTime = this.byId("idReleaseDateTime");
@@ -239,7 +239,7 @@ sap.ui.define(
                 try {
                     for (var oContext of aSelectedContexts) {
                         var oActionContext = oContext.getModel().bindContext(sCurrentAction + "(...)", oContext);
-                        
+
                         // Set parameters
                         aParameterValues.forEach(function (oParam) {
                             oActionContext.setParameter(oParam.name, oParam.value);
@@ -281,7 +281,7 @@ sap.ui.define(
             _handleActionMessages: function (sFallbackSuccessMessage, aFallbackErrors) {
                 var oMessageManager = sap.ui.getCore().getMessageManager();
                 var aMessages = oMessageManager.getMessageModel().getData() || [];
-                
+
                 var aErrorMessages = (aFallbackErrors || []).slice(); // Add fallback errors from catch blocks
                 var aWarningMessages = [];
                 var aSuccessMessages = [];
@@ -313,11 +313,11 @@ sap.ui.define(
                 if (aErrorMessages.length > 0 && aSuccessMessages.length > 0) {
                     var aUniqueErrors = [...new Set(aErrorMessages)];
                     var aUniqueSuccess = [...new Set(aSuccessMessages)];
-                    var sPartialMsg = "Warning: Some operations failed.\n\n" + 
-                                      "Errors:\n" + aUniqueErrors.map(function(m){ return "• " + m; }).join("\n") + "\n\n" +
-                                      "Successes:\n" + aUniqueSuccess.map(function(m){ return "• " + m; }).join("\n");
+                    var sPartialMsg = "Warning: Some operations failed.\n\n" +
+                        "Errors:\n" + aUniqueErrors.map(function (m) { return "• " + m; }).join("\n") + "\n\n" +
+                        "Successes:\n" + aUniqueSuccess.map(function (m) { return "• " + m; }).join("\n");
                     MessageBox.warning(sPartialMsg);
-                    return true; 
+                    return true;
                 }
 
                 // 3. FULL SUCCESS
@@ -327,7 +327,7 @@ sap.ui.define(
                 } else {
                     MessageToast.show(sFallbackSuccessMessage);
                 }
-                
+
                 return true;
             },
 
@@ -394,7 +394,7 @@ sap.ui.define(
 
                 if (aSelectedContexts.length > 1) {
                     MessageBox.warning(
-                        "You have selected multiple jobs. Only the first selected job (" + sOldJobName + ") will be copied.\n\nDo you want to continue?", 
+                        "You have selected multiple jobs. Only the first selected job (" + sOldJobName + ") will be copied.\n\nDo you want to continue?",
                         {
                             title: "Multiple Jobs Selected",
                             actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
@@ -452,7 +452,7 @@ sap.ui.define(
                 var oInput = this.byId("copyJobNameInput");
                 var oDialog = this.byId("copyJobDialog");
                 var sValue = oInput ? oInput.getValue() : "";
-                
+
                 var bValid = true;
                 var sErrorMsg = "";
 
@@ -517,9 +517,9 @@ sap.ui.define(
                 }
 
                 BusyIndicator.hide();
-                
+
                 var bIsSuccess = that._handleActionMessages("Copy and Rename completed successfully.", aFailedMessages);
-                
+
                 that.onCloseCopyDialog();
                 if (bIsSuccess) {
                     that._clearStartDateFilter();
@@ -583,20 +583,25 @@ sap.ui.define(
             },
 
             // ==================== HELPER: Refresh Table ====================
+            // _refreshTable: function () {
+            //     var oTable = this.byId("Table");
+            //     if (oTable) {
+            //         var oContent = oTable.getContent();
+            //         if (oContent) {
+            //             var oBinding = oContent.getBinding("rows") || oContent.getBinding("items");
+            //             if (!oBinding && typeof oContent.getRowBinding === "function") {
+            //                 oBinding = oContent.getRowBinding();
+            //             }
+            //             if (oBinding) {
+            //                 oBinding.refresh();
+            //             }
+            //         }
+            //     }
+            // },
             _refreshTable: function () {
-                var oTable = this.byId("Table");
-                if (oTable) {
-                    var oContent = oTable.getContent();
-                    if (oContent) {
-                        var oBinding = oContent.getBinding("rows") || oContent.getBinding("items");
-                        if (!oBinding && typeof oContent.getRowBinding === "function") {
-                            oBinding = oContent.getRowBinding();
-                        }
-                        if (oBinding) {
-                            oBinding.refresh();
-                        }
-                    }
-                }
+                var oContent = this.byId("Table").getContent();
+                var oBinding = oContent.getBinding("rows") || oContent.getBinding("items") || oContent.getRowBinding();
+                oBinding.refresh();
             },
 
             // ==================== STOP JOB (với Confirmation) ====================
@@ -615,7 +620,6 @@ sap.ui.define(
                 var that = this;
                 MessageBox.confirm(sMessage, {
                     title: "Confirm Stop Job",
-                    emphasizedAction: MessageBox.Action.OK,
                     onClose: function (sAction) {
                         if (sAction === MessageBox.Action.OK) {
                             that._executeAction(aSelectedContexts, "com.sap.gateway.srvd.z_sd_job_ovp.v0001.StopJob", "Stop");
@@ -639,7 +643,6 @@ sap.ui.define(
                 var that = this;
                 MessageBox.confirm(sMessage, {
                     title: "Confirm Delete Job",
-                    emphasizedAction: MessageBox.Action.OK,
                     onClose: function (sAction) {
                         if (sAction === MessageBox.Action.OK) {
                             that._executeAction(aSelectedContexts, "com.sap.gateway.srvd.z_sd_job_ovp.v0001.DeleteJob", "Delete");
@@ -661,28 +664,21 @@ sap.ui.define(
             },
 
             onFilterOwnJobs: function () {
-                var sCurrentUser = sap.ushell?.Container
-                    ? sap.ushell.Container.getService("UserInfo").getId()
-                    : "DEV-119";
-
-                if (!sCurrentUser) return;
-
-                var oFilterBar = this.byId("FilterBar")?.getContent();
-                if (!oFilterBar?.getFilterConditions) return;
-
-                var mConditions = Object.assign({}, oFilterBar.getFilterConditions());
-
-                if (this._bFilteringOwnJobs) {
-                    delete mConditions.CreatedBy;
-                    MessageToast.show("Showing all jobs.");
-                } else {
-                    mConditions.CreatedBy = [{ operator: "EQ", values: [sCurrentUser], validated: "Validated" }];
-                    MessageToast.show("Filtering jobs by: " + sCurrentUser);
+                var sCurrentUser;
+                if (sap.ushell && sap.ushell.Container) {
+                    sCurrentUser = sap.ushell.Container.getService("UserInfo").getId();
                 }
+                if (!sCurrentUser) {
+                    MessageToast.show("Không lấy được ID người dùng.");
+                    return;
+                }
+                var oFilterBar = this.byId("FilterBar").getContent();
+                oFilterBar.setFilterConditions({
+                    CreatedBy: [{ operator: "EQ", values: [sCurrentUser] }]
+                });
+                oFilterBar.triggerSearch();
 
-                oFilterBar.setFilterConditions(mConditions);
-                oFilterBar.triggerSearch?.();
-                this._bFilteringOwnJobs = !this._bFilteringOwnJobs;
+                MessageToast.show("Đã lọc theo: " + sCurrentUser);
             },
             // --- THÊM HÀM NÀY ĐỂ ĐIỀU HƯỚNG SANG TRANG DETAIL (GIỐNG SM37) ---
             onRowPress: function (oEvent) {

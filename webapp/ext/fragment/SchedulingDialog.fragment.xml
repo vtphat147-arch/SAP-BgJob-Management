@@ -1,58 +1,99 @@
-<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:f="sap.ui.layout.form">
-    <Dialog title="Scheduling Information" contentWidth="600px">
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form"
+>
+    <Dialog
+        title="Scheduling Information"
+        contentWidth="600px"
+    >
         <content>
-            <f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanXL="4" labelSpanL="4" labelSpanM="4" adjustLabelSpan="false">
+            <f:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="4"
+                labelSpanL="4"
+                labelSpanM="4"
+                adjustLabelSpan="false"
+            >
                 <f:content>
                     <!-- Checkbox Start Immediately -->
-                    <Label text="Start Immediately"/>
-                    <CheckBox selected="{local>/startImmediately}" select=".onCheckImmediate"/>
-
+                    <Label text="Start Immediately" />
+                    <CheckBox
+                        selected="{local>/startImmediately}"
+                        select=".onCheckImmediate"
+                    />
                     <!-- Date Picker: Ẩn/Hiện dựa vào checkbox trên -->
-                    <Label text="Job Start (Local Time)"/>
-                    <DateTimePicker 
-                        dateValue="{local>/startDate}" 
+                    <Label text="Job Start (Local Time)" />
+                    <DateTimePicker
+                        dateValue="{local>/startDate}"
                         enabled="{= !${local>/startImmediately}}"
                         displayFormat="dd.MM.yyyy, HH:mm:ss"
                     />
-
-                    <Label text="Recurrence Pattern"/>
+                    <Label text="Recurrence Pattern" />
                     <Select selectedKey="{local>/recurrence}">
                         <items>
-                            <core:Item key="Single Run" text="Single Run"/>
-                            <core:Item key="Minutes" text="Minutes"/>
-                            <core:Item key="Hourly" text="Hourly"/>
-                            <core:Item key="Daily" text="Daily"/>
-                            <core:Item key="Weekly" text="Weekly"/>
-                            <core:Item key="Monthly" text="Monthly"/>
+                            <core:Item
+                                key="Single Run"
+                                text="Single Run"
+                            />
+                            <core:Item
+                                key="Minutes"
+                                text="Minutes"
+                            />
+                            <core:Item
+                                key="Hourly"
+                                text="Hourly"
+                            />
+                            <core:Item
+                                key="Daily"
+                                text="Daily"
+                            />
+                            <core:Item
+                                key="Weekly"
+                                text="Weekly"
+                            />
+                            <core:Item
+                                key="Monthly"
+                                text="Monthly"
+                            />
                         </items>
                     </Select>
-
-
-                    <Label text="Every" visible="{= ${local>/recurrence} !== 'Single Run'}"/>
-                    
-                    <HBox visible="{= ${local>/recurrence} !== 'Single Run'}" alignItems="Center">
-                        <Input 
-                            value="{local>/frequency}" 
-                            type="Number" 
-                            width="4rem" 
+                    <Label
+                        text="Every"
+                        visible="{= ${local>/recurrence} !== 'Single Run'}"
+                    />
+                    <HBox
+                        visible="{= ${local>/recurrence} !== 'Single Run'}"
+                        alignItems="Center"
+                    >
+                        <Input
+                            value="{local>/frequency}"
+                            type="Number"
+                            width="4rem"
                             textAlign="End"
-                            class="sapUiTinyMarginEnd" />
-                        
+                            class="sapUiTinyMarginEnd"
+                        />
                         <Text text="{= 
                             ${local>/recurrence} === 'Minutes' ? 'Minute(s)' : 
                             ${local>/recurrence} === 'Hourly' ? 'Hour(s)' : 
                             ${local>/recurrence} === 'Daily' ? 'Day(s)' : 
                             ${local>/recurrence} === 'Weekly' ? 'Week(s)' : 'Month(s)' 
-                        }"/>
+                        }" />
                     </HBox>
-
                 </f:content>
             </f:SimpleForm>
         </content>
         <buttons>
-            <Button text="OK" type="Emphasized" press=".onCloseScheduleDialog"/>
-            <Button text="Reset Scheduling Options" press=".onResetSchedule"/>
-            <Button text="Cancel" press=".onCancelScheduleDialog"/>
+            <Button
+                text="OK"
+                type="Emphasized"
+                press=".onCloseScheduleDialog"
+            />
+            <Button
+                text="Reset Scheduling Options"
+                press=".onResetSchedule"
+            />
         </buttons>
     </Dialog>
 </core:FragmentDefinition>

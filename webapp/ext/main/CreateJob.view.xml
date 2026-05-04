@@ -36,8 +36,7 @@
                                 value="{local>/jobName}"
                                 maxLength="32"
                                 liveChange=".onMarkTouched"
-                                placeholder="Job name (max 32 chars)
-                                       ..."
+                                placeholder="Job name (max 32 chars)"
                                 valueState="{= ${local>/touched} &amp;&amp; !${local>/jobName} ? 'Error' : 'None'}"
                                 valueStateText="Please enter a Job Name."
                             />
@@ -48,8 +47,7 @@
                             <Input
                                 value="{local>/programName}"
                                 maxLength="40"
-                                placeholder="Program name (max 40 chars)
-                                       ..."
+                                placeholder="Program name (max 40 chars)"
                                 showValueHelp="true"
                                 valueHelpRequest=".onProgramValueHelp"
                                 change=".onProgramChange"
@@ -69,8 +67,7 @@
                             <Input
                                 value="{local>/variantName}"
                                 maxLength="14"
-                                placeholder="Variant (max 14 chars)
-                                       ..."
+                                placeholder="Variant (max 14 chars)"
                                 showValueHelp="true"
                                 valueHelpRequest=".onVariantValueHelp"
                             />

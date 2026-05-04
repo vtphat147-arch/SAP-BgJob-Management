@@ -25,7 +25,6 @@ sap.ui.define([
             this.getView().setModel(oModel, "local");
         },
 
-        // onMarkTouched: function (oEvent) {
         //     this.getView().getModel("local").setProperty("/touched", true);
         //     // 2. Thêm logic: Ép chữ hoa & Xóa ký tự đặc biệt
         //     if (oEvent) {
@@ -53,11 +52,9 @@ sap.ui.define([
             const oInput = oEvent.getSource();
             const sFormatted = oInput.getValue().toUpperCase();            // replace(/[^A-Z0-9_]/g, "");
             oInput.setValue(sFormatted);
-            oInput.getBinding("value").getModel().setProperty(oInput.getBinding("value").getPath(), sFormatted);
-
             this.getView().getModel("local").setProperty("/touched", true);
         },
-        onOpenScheduleDialog: function () {
+        onOpenScheduleDialog: function () { //Phân này coi giải thích lại
             var oView = this.getView();
 
 
@@ -72,8 +69,6 @@ sap.ui.define([
                 });
             }
 
-            this._oBackupData = JSON.parse(JSON.stringify(oView.getModel("local").getData()));
-
             this._pDialog.then(function (oDialog) {
                 oDialog.open();
             });
@@ -86,14 +81,6 @@ sap.ui.define([
             });
         },
 
-        onCancelScheduleDialog: function () {
-            if (this._oBackupData) {
-                this.getView().getModel("local").setData(this._oBackupData);
-            }
-            this._pDialog.then(function (oDialog) {
-                oDialog.close();
-            });
-        },
 
         onResetSchedule: function () {
             var oModel = this.getView().getModel("local");
@@ -103,18 +90,17 @@ sap.ui.define([
         },
 
         // ========== HELPER: Mở Value Help Dialog (Dùng chung cho Program & Variant) ==========
-        _openValueHelp: async function (sDialogKey, sFragmentName, aInitialFilters) {
+        _openValueHelp: function (sDialogKey, sFragmentName, aInitialFilters) {
             var oView = this.getView();
             // 1. Nếu Dialog chưa được tạo, thì Load nó lên và lưu vào biến
             if (!this[sDialogKey]) {
-                this[sDialogKey] = await Fragment.load({
+                this[sDialogKey] = Fragment.load({
                     id: oView.getId(),
                     name: "project5.ext.fragment." + sFragmentName,
                     controller: this
                 });
                 oView.addDependent(this[sDialogKey]);  // Cho phép Dialog xài chung dữ liệu với View
             }
-            // 2. Lấy cái Dialog ra xài: áp filter và Mở lên
             var oDialog = this[sDialogKey];
             oDialog.getBinding("items").filter(aInitialFilters || []);
             oDialog.open();
@@ -134,7 +120,6 @@ sap.ui.define([
                         new Filter("ProgramName", FilterOperator.Contains, sValue),
                         new Filter("Description", FilterOperator.Contains, sValue)
                     ],
-                    and: false
                 }));
             }
             oEvent.getSource().getBinding("items").filter(aFilters);
@@ -224,7 +209,7 @@ sap.ui.define([
 
                 // 3. Chuẩn bị và Gắn tham số cho OData Action
                 var oAction = oODataModel.bindContext("/JobList/com.sap.gateway.srvd.z_sd_job_ovp.v0001.ScheduleJob(...)");
-                oAction.setParameter("JobName", (oLocalData.jobName || "New Job").toUpperCase());
+                oAction.setParameter("JobName", (oLocalData.jobName || "New Job"));
                 oAction.setParameter("ProgramName", oLocalData.programName);
                 oAction.setParameter("VariantName", oLocalData.variantName || "");
                 oAction.setParameter("IsImmediate", oLocalData.startImmediately ? "X" : "");
@@ -254,15 +239,11 @@ sap.ui.define([
 
 
         onNavBack: function () {
-            var oRouter = this.getOwnerComponent().getRouter();
-            oRouter.navTo("JobListMain");
-
+            this.getOwnerComponent().getRouter().navTo("JobListMain");
             this.onInit();
-            var oWizard = this.byId("CreateJobWizard");
-            if (oWizard) {
-                var oStep1 = this.byId("Step1");
-                oWizard.discardProgress(oStep1);
-            }
+
+            var oW = this.byId("CreateJobWizard");
+            oW && oW.discardProgress(this.byId("Step1"));
         }
     });
 });
