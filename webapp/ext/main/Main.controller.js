@@ -651,6 +651,7 @@ sap.ui.define(
             _refreshTable: function () {
                 var oTable = this.byId("Table");
                 if (oTable) {
+                    // 1. Refresh the binding data
                     var oContent = oTable.getContent();
                     if (oContent) {
                         var oBinding = oContent.getBinding("rows") || oContent.getBinding("items");
@@ -660,6 +661,14 @@ sap.ui.define(
                         if (oBinding) {
                             oBinding.refresh();
                         }
+                    }
+
+                    // 2. Clear the table selection programmatically
+                    if (typeof oTable.clearSelection === "function") {
+                        oTable.clearSelection();
+                    } else if (oContent && typeof oContent.clearSelection === "function") {
+                        // Fallback fallback target (e.g., inner ResponsiveTable/GridTable)
+                        oContent.clearSelection();
                     }
                 }
             },
