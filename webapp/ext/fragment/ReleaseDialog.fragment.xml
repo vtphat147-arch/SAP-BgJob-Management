@@ -112,12 +112,11 @@
 
                     <Label text="Every" visible="{= ${localRelease>/recurrence} !== 'Single Run'}"/>
                     <HBox visible="{= ${localRelease>/recurrence} !== 'Single Run'}" alignItems="Center">
-                        <Input 
+                        <StepInput 
                             id="idFrequencyInput"
                             value="{localRelease>/frequency}" 
-                            type="Text" 
-                            width="5rem" 
-                            textAlign="End"
+                            min="1" 
+                            width="6rem" 
                             change=".onFrequencyChange"
                             class="sapUiTinyMarginEnd" />
                         <Text text="{= 
