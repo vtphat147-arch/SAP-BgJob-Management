@@ -32,7 +32,7 @@ sap.ui.define([
             oInput.setValue(sFormatted);
             this.getView().getModel("local").setProperty("/touched", true);
         },
-        onOpenScheduleDialog: function () { //Phân này coi giải thích lại
+        onOpenScheduleDialog: function () {
             var oView = this.getView();
 
 
@@ -84,8 +84,7 @@ sap.ui.define([
         // ========== HELPER: Mở Value Help Dialog (Dùng chung cho Program & Variant) ==========
         _openValueHelp: async function (sDialogKey, sFragmentName, aInitialFilters) {
             var oView = this.getView();
-            
-            // 1. Nếu Dialog chưa được tải thì dùng await để tải (code sẽ tạm dừng ở đây đợi tải xong)
+
             if (!this[sDialogKey]) {
                 this[sDialogKey] = await Fragment.load({
                     id: oView.getId(),
@@ -94,8 +93,8 @@ sap.ui.define([
                 });
                 oView.addDependent(this[sDialogKey]);
             }
-            
-            // 2. Tải xong rồi thì ép Filter và mở lên, nhìn code thẳng tuột cực kỳ dễ đọc
+
+
             this[sDialogKey].getBinding("items").filter(aInitialFilters || []);
             this[sDialogKey].open();
         },
@@ -125,18 +124,18 @@ sap.ui.define([
                 var oModel = this.getView().getModel("local");
                 oModel.setProperty("/programName", oSelectedItem.getCells()[0].getText());
                 oModel.setProperty("/variantName", "");
-                this.onMarkTouched();
+                oModel.setProperty("/touched", true);
             }
         },
 
         onProgramChange: function (oEvent) {
             var sValue = oEvent.getParameter("value");
+            var oModel = this.getView().getModel("local");
             if (sValue) {
-                var oModel = this.getView().getModel("local");
                 oModel.setProperty("/programName", sValue.toUpperCase());
                 oModel.setProperty("/variantName", "");
             }
-            this.onMarkTouched();
+            oModel.setProperty("/touched", true);
         },
 
         // ========== VARIANT VALUE HELP ==========
@@ -165,9 +164,8 @@ sap.ui.define([
             var oSelectedItem = oEvent.getParameter("selectedItem");
             if (!oSelectedItem) { return; }
             this.getView().getModel("local").setProperty("/variantName", oSelectedItem.getCells()[0].getText());
-            this.onMarkTouched();
+            this.getView().getModel("local").setProperty("/touched", true);
         },
-
 
         onCheckImmediate: function (oEvent) {
             var bSelected = oEvent.getParameter("selected");

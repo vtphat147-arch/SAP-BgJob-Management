@@ -400,7 +400,7 @@ sap.ui.define(
             _executeAction: async function (aContexts, sActionName, sLabel) {
                 sap.ui.getCore().getMessageManager().removeAllMessages();
 
-                const results = await Promise.allSettled(
+                const results = await Promise.all(
                     aContexts.map(ctx => ctx.getModel().bindContext(sActionName + "(...)", ctx).execute())
                 );
 

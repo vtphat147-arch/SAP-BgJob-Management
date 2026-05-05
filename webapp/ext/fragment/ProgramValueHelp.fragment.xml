@@ -5,6 +5,7 @@
     <TableSelectDialog
         title="Select Program"
         contentWidth="800px"
+        rememberSelections="false"
         class="sapUiPopupWithPadding"
         items="{
             path: '/Z_I_ProgramVH',
