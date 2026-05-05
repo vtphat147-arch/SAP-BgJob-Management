@@ -82,20 +82,22 @@ sap.ui.define([
         },
 
         // ========== HELPER: Mở Value Help Dialog (Dùng chung cho Program & Variant) ==========
-        _openValueHelp: function (sDialogKey, sFragmentName, aInitialFilters) {
+        _openValueHelp: async function (sDialogKey, sFragmentName, aInitialFilters) {
             var oView = this.getView();
-            // 1. Nếu Dialog chưa được tạo, thì Load nó lên và lưu vào biến
+            
+            // 1. Nếu Dialog chưa được tải thì dùng await để tải (code sẽ tạm dừng ở đây đợi tải xong)
             if (!this[sDialogKey]) {
-                this[sDialogKey] = Fragment.load({
+                this[sDialogKey] = await Fragment.load({
                     id: oView.getId(),
                     name: "project5.ext.fragment." + sFragmentName,
                     controller: this
                 });
-                oView.addDependent(this[sDialogKey]);  // Cho phép Dialog xài chung dữ liệu với View
+                oView.addDependent(this[sDialogKey]);
             }
-            var oDialog = this[sDialogKey];
-            oDialog.getBinding("items").filter(aInitialFilters || []);
-            oDialog.open();
+            
+            // 2. Tải xong rồi thì ép Filter và mở lên, nhìn code thẳng tuột cực kỳ dễ đọc
+            this[sDialogKey].getBinding("items").filter(aInitialFilters || []);
+            this[sDialogKey].open();
         },
 
         // ========== PROGRAM VALUE HELP ==========
