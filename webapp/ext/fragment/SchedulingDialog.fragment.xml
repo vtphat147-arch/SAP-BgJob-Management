@@ -67,11 +67,10 @@
                         visible="{= ${local>/recurrence} !== 'Single Run'}"
                         alignItems="Center"
                     >
-                        <Input
+                        <StepInput
                             value="{local>/frequency}"
-                            type="Number"
-                            width="4rem"
-                            textAlign="End"
+                            min="1"
+                            width="6rem"
                             class="sapUiTinyMarginEnd"
                         />
                         <Text text="{= 

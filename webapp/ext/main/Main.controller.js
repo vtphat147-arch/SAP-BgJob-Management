@@ -737,13 +737,25 @@ sap.ui.define(
                     MessageToast.show("Can't get current user.");
                     return;
                 }
-                var oFilterBar = this.byId("FilterBar").getContent();
-                oFilterBar.setFilterConditions({
-                    CreatedBy: [{ operator: "EQ", values: [sCurrentUser] }]
-                });
-                oFilterBar.triggerSearch();
 
-                MessageToast.show("Filtered by user: " + sCurrentUser);
+                var oFilterBar = this.byId("FilterBar").getContent();
+                var mConditions = oFilterBar.getFilterConditions() || {};
+
+                // Đảo trạng thái: đang bật thành tắt, đang tắt thành bật
+                this._bIsMyJobsFiltered = !this._bIsMyJobsFiltered;
+
+                if (this._bIsMyJobsFiltered) {
+                    // Bật: Đặt filter CreatedBy = tên user
+                    mConditions.CreatedBy = [{ operator: "EQ", values: [sCurrentUser] }];
+                    MessageToast.show("Filtered by user: " + sCurrentUser);
+                } else {
+                    // Tắt: Xóa filter CreatedBy để hiện tất cả
+                    delete mConditions.CreatedBy;
+                    MessageToast.show("Showing all jobs");
+                }
+
+                oFilterBar.setFilterConditions(mConditions);
+                oFilterBar.triggerSearch();
             },
             // --- THÊM HÀM NÀY ĐỂ ĐIỀU HƯỚNG SANG TRANG DETAIL (GIỐNG SM37) ---
             onRowPress: function (oEvent) {

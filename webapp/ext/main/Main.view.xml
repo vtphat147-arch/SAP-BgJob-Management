@@ -55,16 +55,15 @@
                         press="onOpenManageMenu"
                     />
                     <Button
-                        text="My Jobs"
-                        icon="sap-icon://employee"
-                        type="Emphasized"
-                        press="onFilterOwnJobs"
-                    />
-                    <Button
                         text="Schedule"
-                        icon="sap-icon://date-time"
                         type="Success"
                         press="onCreateJob"
+                    />
+                    <Button
+                        text="My Jobs"
+                        icon="sap-icon://customer"
+                        type="Emphasized"
+                        press="onFilterOwnJobs"
                     />
                     <Button
                         id="btnAnalytics"

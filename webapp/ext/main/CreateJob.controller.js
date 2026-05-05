@@ -19,35 +19,13 @@ sap.ui.define([
                 touched: false,
                 startImmediately: true,
                 startDate: new Date(),
-                recurrence: "Single Run"
+                recurrence: "Single Run",
+                frequency: 1
             };
             var oModel = new JSONModel(oData);
             this.getView().setModel(oModel, "local");
         },
 
-        //     this.getView().getModel("local").setProperty("/touched", true);
-        //     // 2. Thêm logic: Ép chữ hoa & Xóa ký tự đặc biệt
-        //     if (oEvent) {
-        //         var oInput = oEvent.getSource();
-        //         var sValue = oInput.getValue();
-
-        //         // Regex: Chỉ giữ lại A-Z, 0-9 và dấu gạch dưới "_"
-        //         var sFormatted = sValue.toUpperCase().replace(/[^A-Z0-9_]/g, "");
-
-        //         if (sValue !== sFormatted) {
-        //             // Cập nhật giá trị hiển thị trên ô Input
-        //             oInput.setValue(sFormatted);
-
-        //             // Cập nhật luôn giá trị vào Data Model để Backend nhận được chuẩn
-        //             var oBinding = oInput.getBinding("value");
-        //             if (oBinding) {
-        //                 var sPath = oBinding.getPath(); // Lấy đường dẫn (ví dụ: /jobName hoặc /programName)
-        //                 this.getView().getModel("local").setProperty(sPath, sFormatted);
-        //             }
-        //         }
-        //     }
-
-        // },
         onMarkTouched: function (oEvent) {
             const oInput = oEvent.getSource();
             const sFormatted = oInput.getValue().toUpperCase();            // replace(/[^A-Z0-9_]/g, "");
@@ -87,6 +65,20 @@ sap.ui.define([
             oModel.setProperty("/startImmediately", true);
             oModel.setProperty("/startDate", new Date());
             oModel.setProperty("/recurrence", "Single Run");
+            oModel.setProperty("/frequency", 1);
+        },
+
+        onChangeFrequency: function (oEvent) {
+            var oInput = oEvent.getSource();
+            var iVal = parseInt(oInput.getValue(), 10);
+
+            // Nếu người dùng nhập số nhỏ hơn 1 hoặc nhập chữ tào lao -> ép về số 1
+            if (isNaN(iVal) || iVal < 1) {
+                oInput.setValue(1);
+                this.getView().getModel("local").setProperty("/frequency", 1);
+            } else {
+                this.getView().getModel("local").setProperty("/frequency", iVal);
+            }
         },
 
         // ========== HELPER: Mở Value Help Dialog (Dùng chung cho Program & Variant) ==========
