@@ -400,8 +400,8 @@ sap.ui.define(
             _executeAction: async function (aContexts, sActionName, sLabel) {
                 sap.ui.getCore().getMessageManager().removeAllMessages();
 
-                const results = await Promise.all(
-                    aContexts.map(ctx => ctx.getModel().bindContext(sActionName + "(...)", ctx).execute())
+                const results = await Promise.allSettled(
+                    aContexts.map(ctx => ctx.getModel().bindContext(sActionName + "(...)", ctx).execute("$direct"))
                 );
 
                 const aFailed = [];
@@ -647,22 +647,6 @@ sap.ui.define(
                 return bChanged;
             },
 
-            // ==================== HELPER: Refresh Table ====================
-            // _refreshTable: function () {
-            //     var oTable = this.byId("Table");
-            //     if (oTable) {
-            //         var oContent = oTable.getContent();
-            //         if (oContent) {
-            //             var oBinding = oContent.getBinding("rows") || oContent.getBinding("items");
-            //             if (!oBinding && typeof oContent.getRowBinding === "function") {
-            //                 oBinding = oContent.getRowBinding();
-            //             }
-            //             if (oBinding) {
-            //                 oBinding.refresh();
-            //             }
-            //         }
-            //     }
-            // },
             _refreshTable: function () {
                 var oContent = this.byId("Table").getContent();
                 var oBinding = oContent.getBinding("rows") || oContent.getBinding("items") || oContent.getRowBinding();

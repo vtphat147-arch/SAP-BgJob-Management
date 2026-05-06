@@ -32,31 +32,26 @@ sap.ui.define([
             oInput.setValue(sFormatted);
             this.getView().getModel("local").setProperty("/touched", true);
         },
-        onOpenScheduleDialog: function () {
+        onOpenScheduleDialog: async function () {
             var oView = this.getView();
 
-
             if (!this._pDialog) {
-                this._pDialog = Fragment.load({
+                this._pDialog = await Fragment.load({
                     id: oView.getId(),
                     name: "project5.ext.fragment.SchedulingDialog",
                     controller: this
-                }).then(function (oDialog) {
-                    oView.addDependent(oDialog);
-                    return oDialog;
                 });
+                oView.addDependent(this._pDialog);
             }
 
-            this._pDialog.then(function (oDialog) {
-                oDialog.open();
-            });
+            this._pDialog.open();
         },
 
         onCloseScheduleDialog: function () {
             this.byId("CreateJobWizard").validateStep(this.byId("Step2"));
-            this._pDialog.then(function (oDialog) {
-                oDialog.close();
-            });
+            if (this._pDialog) {
+                this._pDialog.close();
+            }
         },
 
 
@@ -217,8 +212,10 @@ sap.ui.define([
                 var aMessages = sap.ui.getCore().getMessageManager().getMessageModel().getData();
                 var oSuccessMsg = aMessages.slice().reverse().find(m => m.type === "Success");
 
-                MessageToast.show(oSuccessMsg ? oSuccessMsg.message : "Job created successfully!");
-                this.onNavBack();
+                var sSuccessMsg = oSuccessMsg ? oSuccessMsg.message : "Job created successfully!";
+                MessageToast.show(sSuccessMsg, { duration: 3000 });
+
+                setTimeout(() => this.onNavBack(), 500);
 
             } catch (oError) {
                 var sMsg = (oError.error && oError.error.message) || oError.message || "Unknown error";
